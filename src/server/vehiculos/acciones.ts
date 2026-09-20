@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import {
+  Combustible,
   EstadoSolicitudViaje,
   EstadoVehiculo,
   EstadoViaje,
@@ -10,6 +11,7 @@ import {
   TipoDocumentoEmpleado,
   TipoIncidenteVehiculo,
   TipoMantenimiento,
+  TipoVehiculo,
   TipoViaje,
 } from '@prisma/client'
 import { db } from '@/lib/db'
@@ -23,6 +25,9 @@ import {
   bloqueosDelChofer,
   bloqueosDelVehiculo,
   costoDelViaje,
+  kilometrajeValido,
+  normalizarPatente,
+  patenteValida,
   validarFin,
   validarInicio,
 } from './reglas'
@@ -628,7 +633,7 @@ export async function accionRegistrarService(
   datos: FormData,
 ): Promise<ResultadoViaje> {
   const sesion = await exigirSesion()
-  exigirPermiso(sesion, 'vehiculos.editar')
+  exigirPermiso(sesion, 'vehiculos.aprobar')
 
   const vehiculoId = String(datos.get('vehiculoId') ?? '')
   const descripcion = opcional(datos.get('descripcion'))
@@ -690,7 +695,7 @@ export async function accionGuardarDocumentoVehiculo(
   datos: FormData,
 ): Promise<ResultadoViaje> {
   const sesion = await exigirSesion()
-  exigirPermiso(sesion, 'vehiculos.editar')
+  exigirPermiso(sesion, 'vehiculos.aprobar')
 
   const vehiculoId = String(datos.get('vehiculoId') ?? '')
   if (!vehiculoId) return { error: 'Elegí el vehículo.' }
@@ -719,7 +724,7 @@ export async function accionRegistrarIncidente(
   datos: FormData,
 ): Promise<ResultadoViaje> {
   const sesion = await exigirSesion()
-  exigirPermiso(sesion, 'vehiculos.editar')
+  exigirPermiso(sesion, 'vehiculos.aprobar')
 
   const vehiculoId = String(datos.get('vehiculoId') ?? '')
   const descripcion = opcional(datos.get('descripcion'))
@@ -749,7 +754,7 @@ export async function accionCambiarEstadoVehiculo(
   estado: EstadoVehiculo,
 ): Promise<ResultadoViaje> {
   const sesion = await exigirSesion()
-  exigirPermiso(sesion, 'vehiculos.editar')
+  exigirPermiso(sesion, 'vehiculos.aprobar')
 
   if (estado === EstadoVehiculo.EN_VIAJE) {
     return { error: 'El estado "en viaje" lo pone el sistema al iniciar un viaje.' }
@@ -767,4 +772,119 @@ export async function accionCambiarEstadoVehiculo(
   revalidatePath(`/vehiculos/${vehiculoId}`)
   revalidatePath('/vehiculos')
   return { ok: true, mensaje: 'Estado actualizado' }
+}
+
+/* ====================== ALTA Y EDICIÓN DE VEHÍCULOS ================= */
+
+const esquemaVehiculo = z.object({
+  patente: z
+    .string()
+    .trim()
+    .refine(patenteValida, 'Tiene que ser tipo ABC123 o AB123CD.'),
+  tipo: z.nativeEnum(TipoVehiculo),
+  marca: z.string().trim().min(2, 'Poné la marca.'),
+  modelo: z.string().trim().min(1, 'Poné el modelo.'),
+  combustible: z.nativeEnum(Combustible),
+})
+
+export async function accionGuardarVehiculo(
+  id: string | null,
+  _previo: ResultadoViaje,
+  datos: FormData,
+): Promise<ResultadoViaje> {
+  const sesion = await exigirSesion()
+  // Ojo: en esta app 'vehiculos.crear' significa "puede pedir un viaje"
+  // (lo tiene el capataz). El alta de un vehículo es gestión de flota:
+  // dueño, administración y logística.
+  exigirPermiso(sesion, 'vehiculos.aprobar')
+
+  // La patente entra sin guiones ni espacios: ABC 123 y ABC-123 son la misma.
+  const patenteCruda = normalizarPatente(String(datos.get('patente') ?? ''))
+
+  const validado = esquemaVehiculo.safeParse({
+    patente: patenteCruda,
+    tipo: datos.get('tipo'),
+    marca: datos.get('marca'),
+    modelo: datos.get('modelo'),
+    combustible: datos.get('combustible') || Combustible.DIESEL,
+  })
+  if (!validado.success) return { errores: aErrores(validado.error) }
+
+  const repetida = await db.vehiculo.findUnique({
+    where: { patente: validado.data.patente },
+    select: { id: true },
+  })
+  if (repetida && repetida.id !== id) {
+    return { errores: { patente: 'Ya hay un vehículo con esa patente.' } }
+  }
+
+  const km = numero(datos.get('kmActual'))
+  const entero = (v: number | null) => (v === null ? null : Math.round(v))
+
+  const comunes = {
+    ...validado.data,
+    interno: opcional(datos.get('interno')),
+    anio: entero(numero(datos.get('anio'))),
+    capacidadCargaKg: entero(numero(datos.get('capacidadCargaKg'))),
+    volumenM3: decimal(numero(datos.get('volumenM3'))),
+    cantidadPasajeros: entero(numero(datos.get('cantidadPasajeros'))),
+    horasActual: entero(numero(datos.get('horasActual'))),
+    costoKmEstimado: decimal(numero(datos.get('costoKmEstimado'))),
+    tieneGps: datos.get('tieneGps') === 'on',
+    choferHabitualId: opcional(datos.get('choferHabitualId')),
+    notas: opcional(datos.get('notas')),
+  }
+
+  if (id) {
+    /*
+     * El odómetro nunca vuelve para atrás: lo mueven los viajes y las
+     * cargas de combustible. Si alguien corrige el número a la baja hay
+     * que decirlo en vez de aceptarlo en silencio, porque se llevaría
+     * puestos los cálculos de consumo y de próximo service.
+     */
+    const actual = await db.vehiculo.findUnique({
+      where: { id },
+      select: { kmActual: true },
+    })
+    if (!actual) return { error: 'Ese vehículo no existe.' }
+
+    const odometro = kilometrajeValido(km, actual.kmActual)
+    if (!odometro.ok) return { errores: { kmActual: odometro.error } }
+
+    await db.vehiculo.update({
+      where: { id },
+      data: { ...comunes, ...(km !== null ? { kmActual: km } : {}) },
+    })
+
+    await registrarAuditoria({
+      usuarioId: sesion.usuarioId,
+      accion: 'EDITAR',
+      entidad: 'Vehiculo',
+      entidadId: id,
+      despues: { patente: comunes.patente },
+    })
+
+    revalidatePath(`/vehiculos/${id}`)
+    revalidatePath('/vehiculos')
+    return { ok: true, id, mensaje: 'Vehículo guardado' }
+  }
+
+  const creado = await db.vehiculo.create({
+    data: {
+      ...comunes,
+      kmActual: km !== null && km > 0 ? km : 0,
+      estado: EstadoVehiculo.DISPONIBLE,
+    },
+  })
+
+  await registrarAuditoria({
+    usuarioId: sesion.usuarioId,
+    accion: 'CREAR',
+    entidad: 'Vehiculo',
+    entidadId: creado.id,
+    despues: { patente: creado.patente, marca: creado.marca, modelo: creado.modelo },
+  })
+
+  revalidatePath('/vehiculos')
+  return { ok: true, id: creado.id, mensaje: 'Vehículo creado' }
 }

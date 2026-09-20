@@ -447,3 +447,47 @@ function formatearPeso(kg: number): string {
     ? `${(kg / 1000).toLocaleString('es-AR', { maximumFractionDigits: 1 })} t`
     : `${formatearNumero(kg)} kg`
 }
+
+/* =====================================================================
+   Alta de un vehículo.
+   ===================================================================== */
+
+/**
+ * Normaliza una patente: sin espacios, sin guiones, en mayúsculas.
+ * "ab 123 cd", "AB-123-CD" y "AB123CD" son la misma patente.
+ */
+export function normalizarPatente(texto: string): string {
+  return texto.replace(/[\s-]/g, '').toUpperCase()
+}
+
+/**
+ * ¿Es una patente argentina?
+ *
+ * Los dos formatos que circulan: el viejo de tres letras y tres números
+ * (ABC123, hasta 2016) y el del Mercosur (AB123CD).
+ */
+export function patenteValida(texto: string): boolean {
+  return /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/.test(normalizarPatente(texto))
+}
+
+/**
+ * ¿Se puede poner este kilometraje?
+ *
+ * El odómetro no vuelve para atrás: lo mueven los viajes y las cargas de
+ * combustible. Si alguien lo corrige a la baja se llevaría puestos el
+ * consumo promedio y el cálculo del próximo service, así que se avisa en
+ * vez de aceptarlo en silencio.
+ */
+export function kilometrajeValido(
+  nuevo: number | null,
+  actual: number,
+): { ok: true } | { ok: false; error: string } {
+  if (nuevo === null) return { ok: true }
+  if (nuevo < actual) {
+    return {
+      ok: false,
+      error: `El vehículo ya tiene ${actual.toLocaleString('es-AR')} km. El odómetro no baja.`,
+    }
+  }
+  return { ok: true }
+}

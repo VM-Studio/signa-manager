@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation'
 import { sesionConPermiso } from '@/lib/auth/pantalla'
+import { puede } from '@/lib/auth/permisos'
 import { obtenerSubcontratista } from '@/server/personal/queries'
 import { SinPermiso } from '@/components/app/SinPermiso'
+import { AccionesSubcontratista } from '@/components/personal/AccionesSubcontratista'
 import {
   AvisoFijo,
   Dato,
@@ -41,6 +43,16 @@ export default async function PaginaSubcontratista({
         subtitulo={textoEnum(s.rubro)}
         volverA="/personal/subcontratistas"
       />
+
+      {puede(sesion, 'personal.editar') && (
+        <AccionesSubcontratista
+          subcontratista={{
+            id: s.id,
+            razonSocial: s.razonSocial,
+            activo: s.activo,
+          }}
+        />
+      )}
 
       {riesgoLegal && (
         <div className="px-4 pt-4">

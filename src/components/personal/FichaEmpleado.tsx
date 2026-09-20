@@ -6,7 +6,9 @@ import type { EmpleadoFicha } from '@/server/personal/queries'
 import { TEXTO_ASISTENCIA } from '@/server/personal/reglas'
 import {
   AvisoFijo,
+  Boton,
   Dato,
+  EnlaceBoton,
   EstadoVacio,
   FilaLista,
   Insignia,
@@ -15,6 +17,7 @@ import {
   Pestanas,
   TituloSeccion,
 } from '@/components/ui'
+import { HojasEmpleado, type HojaEmpleado } from './HojasEmpleado'
 import { cn } from '@/lib/cn'
 import {
   cuil as formatoCuil,
@@ -55,8 +58,12 @@ const COLOR_ASISTENCIA: Record<Asistencia, string> = {
 export function FichaEmpleado({
   empleado,
   asistencia,
+  puedeEditar,
+  obras,
 }: {
   empleado: EmpleadoFicha
+  puedeEditar: boolean
+  obras: Array<{ id: string; codigo: string; nombre: string }>
   asistencia: {
     dias: DiaAsistencia[]
     totales: {
@@ -70,6 +77,7 @@ export function FichaEmpleado({
   }
 }) {
   const [pestana, setPestana] = useState('datos')
+  const [hoja, setHoja] = useState<HojaEmpleado | null>(null)
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
 
@@ -108,6 +116,45 @@ export function FichaEmpleado({
           </div>
         </div>
       </div>
+
+      {puedeEditar && (
+        <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-3">
+          <EnlaceBoton
+            tamano="chico"
+            href={`/personal/empleados/${empleado.id}/editar`}
+          >
+            Editar ficha
+          </EnlaceBoton>
+          <Boton
+            tamano="chico"
+            variante="secundario"
+            onClick={() => setHoja('valorHora')}
+          >
+            Valor hora
+          </Boton>
+          <Boton
+            tamano="chico"
+            variante="secundario"
+            onClick={() => setHoja('novedad')}
+          >
+            Novedad
+          </Boton>
+          <Boton
+            tamano="chico"
+            variante="secundario"
+            onClick={() => setHoja('pago')}
+          >
+            Pago
+          </Boton>
+          <Boton
+            tamano="chico"
+            variante="fantasma"
+            onClick={() => setHoja('baja')}
+          >
+            {empleado.activo ? 'Dar de baja' : 'Reactivar'}
+          </Boton>
+        </div>
+      )}
 
       {docsVencidos.length > 0 && (
         <div className="px-4 pt-4">
@@ -175,7 +222,21 @@ export function FichaEmpleado({
             </ListaDatos>
           </div>
 
-          <TituloSeccion>Historial de valor hora</TituloSeccion>
+          <TituloSeccion
+            accion={
+              puedeEditar ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('valorHora')}
+                >
+                  Cambiar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Historial de valor hora
+          </TituloSeccion>
           <Lista>
             {empleado.historialValorHora.map((h) => (
               <FilaLista
@@ -226,6 +287,21 @@ export function FichaEmpleado({
       {/* --------------------------- DOCUMENTACIÓN ------------------------- */}
       {pestana === 'documentacion' && (
         <>
+          <TituloSeccion
+            accion={
+              puedeEditar ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('documento')}
+                >
+                  Cargar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Documentación
+          </TituloSeccion>
           {empleado.documentos.length === 0 ? (
             <EstadoVacio
               titulo="Sin documentación cargada"
@@ -268,6 +344,21 @@ export function FichaEmpleado({
       {/* ------------------------------- EPP ------------------------------- */}
       {pestana === 'epp' && (
         <>
+          <TituloSeccion
+            accion={
+              puedeEditar ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('epp')}
+                >
+                  Registrar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Elementos entregados
+          </TituloSeccion>
           {empleado.entregasEpp.length === 0 ? (
             <EstadoVacio
               titulo="Sin entregas registradas"
@@ -396,7 +487,21 @@ export function FichaEmpleado({
       {/* --------------------------- NOVEDADES ----------------------------- */}
       {pestana === 'novedades' && (
         <>
-          <TituloSeccion>Novedades</TituloSeccion>
+          <TituloSeccion
+            accion={
+              puedeEditar ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('novedad')}
+                >
+                  Cargar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Novedades
+          </TituloSeccion>
           {empleado.novedades.length === 0 ? (
             <EstadoVacio
               titulo="Sin novedades"
@@ -420,7 +525,21 @@ export function FichaEmpleado({
             </Lista>
           )}
 
-          <TituloSeccion>Pagos</TituloSeccion>
+          <TituloSeccion
+            accion={
+              puedeEditar ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('pago')}
+                >
+                  Registrar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Pagos
+          </TituloSeccion>
           {empleado.pagos.length === 0 ? (
             <EstadoVacio titulo="Sin pagos registrados" mensaje="—" />
           ) : (
@@ -438,6 +557,13 @@ export function FichaEmpleado({
           )}
         </>
       )}
+
+      <HojasEmpleado
+        hoja={hoja}
+        alCerrar={() => setHoja(null)}
+        empleado={empleado}
+        obras={obras}
+      />
     </div>
   )
 }

@@ -339,3 +339,54 @@ export function consumo(valor: MontoEntrada): string {
 export function litros(valor: MontoEntrada): string {
   return `${numeroDecimalOEntero(aNumero(valor), 1)} L`
 }
+
+/* ---------------------------------------------------------------------
+   De texto a número.
+
+   Lo de arriba es para mostrar; esto es para leer lo que llega en un
+   CSV o lo que alguien tipeó en un campo.
+   --------------------------------------------------------------------- */
+
+/**
+ * Un número escrito a mano.
+ *
+ * Acá se mezclan dos convenciones y confundirlas cambia el número por
+ * mil: en el CSV que exporta el contador "4.500,50" es cuatro mil
+ * quinientos con cincuenta, y en el que sale de una planilla en inglés
+ * "4500.50" es lo mismo.
+ *
+ * La regla: manda el separador que va último. Y si hay uno solo y deja
+ * exactamente tres dígitos detrás ("4.500"), es separador de miles, no
+ * decimal: nadie escribe un valor hora con tres decimales.
+ */
+export function numeroDeTexto(t: string | undefined): number | null {
+  if (!t) return null
+  const limpio = t.replace(/[^\d.,-]/g, '')
+  if (!limpio) return null
+
+  const ultimaComa = limpio.lastIndexOf(',')
+  const ultimoPunto = limpio.lastIndexOf('.')
+
+  let normalizado: string
+  if (ultimaComa >= 0 && ultimoPunto >= 0) {
+    // Están los dos: el último es el decimal.
+    normalizado =
+      ultimaComa > ultimoPunto
+        ? limpio.replace(/\./g, '').replace(',', '.')
+        : limpio.replace(/,/g, '')
+  } else if (ultimaComa >= 0) {
+    // Solo coma: en es-AR siempre es el decimal.
+    normalizado = limpio.replace(',', '.')
+  } else if (ultimoPunto >= 0) {
+    const decimales = limpio.length - ultimoPunto - 1
+    normalizado =
+      decimales === 3
+        ? limpio.replace(/\./g, '') // 4.500 son cuatro mil quinientos
+        : limpio
+  } else {
+    normalizado = limpio
+  }
+
+  const n = Number(normalizado)
+  return Number.isFinite(n) ? n : null
+}

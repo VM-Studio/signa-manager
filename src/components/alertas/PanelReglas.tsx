@@ -1,18 +1,21 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFormStatus } from 'react-dom'
 import { CanalNotificacion, Rol, Severidad } from '@prisma/client'
 import {
   accionGuardarRegla,
+  accionVerResumenDiario,
   type ResultadoAlerta,
 } from '@/server/alertas/acciones'
+import type { ResumenDiario } from '@/lib/alertas/notificaciones'
 import {
   AvisoFijo,
   Boton,
   CampoNumero,
   CampoSelect,
+  EstadoVacio,
   FilaLista,
   HojaInferior,
   Insignia,
@@ -76,6 +79,8 @@ const UNIDAD: Record<string, string> = {
 
 export function PanelReglas({ reglas }: { reglas: ReglaVista[] }) {
   const [editando, setEditando] = useState<ReglaVista | null>(null)
+  const [resumen, setResumen] = useState<ResumenDiario[] | null>(null)
+  const [cargandoResumen, empezarResumen] = useTransition()
 
   const porModulo = new Map<string, ReglaVista[]>()
   for (const r of reglas) {
@@ -95,6 +100,32 @@ export function PanelReglas({ reglas }: { reglas: ReglaVista[] }) {
           más problemas resuelven.
         </AvisoFijo>
       </div>
+
+      <TituloSeccion
+        accion={
+          <Boton
+            tamano="chico"
+            variante="secundario"
+            cargando={cargandoResumen}
+            onClick={() =>
+              empezarResumen(async () => {
+                setResumen(await accionVerResumenDiario())
+              })
+            }
+          >
+            Ver resumen
+          </Boton>
+        }
+      >
+        Resumen diario
+      </TituloSeccion>
+      <p className="px-4 text-chico text-grafito">
+        Lo que le llegaría hoy a cada uno si el envío por mail o WhatsApp
+        estuviera conectado. Mientras tanto, cada uno lo ve en su bandeja de
+        alertas.
+      </p>
+
+      <HojaResumen resumen={resumen} alCerrar={() => setResumen(null)} />
 
       {[...porModulo.entries()].map(([modulo, lista]) => (
         <div key={modulo}>
@@ -279,5 +310,76 @@ function Guardar() {
     <Boton type="submit" ancho cargando={pending}>
       Guardar
     </Boton>
+  )
+}
+
+/* ---------------------------------------------------------------------
+   El resumen diario, tal como se enviaría.
+   Sirve para revisar a quién le llega qué antes de conectar el canal.
+   --------------------------------------------------------------------- */
+
+function HojaResumen({
+  resumen,
+  alCerrar,
+}: {
+  resumen: ResumenDiario[] | null
+  alCerrar: () => void
+}) {
+  if (resumen === null) return null
+
+  const total = resumen.reduce((a, r) => a + r.alertas.length, 0)
+
+  return (
+    <HojaInferior
+      abierta
+      alCerrar={alCerrar}
+      alto="alto"
+      titulo="Resumen diario"
+      descripcion={
+        resumen.length === 0
+          ? 'Nadie tiene alertas abiertas.'
+          : `${plural(total, 'alerta')} repartidas entre ${plural(resumen.length, 'persona')}.`
+      }
+    >
+      {resumen.length === 0 ? (
+        <EstadoVacio
+          titulo="No hay nada para avisar"
+          mensaje="Cuando haya alertas abiertas, acá se ve a quién le tocan."
+        />
+      ) : (
+        <div className="space-y-5">
+          {resumen.map((r) => (
+            <div key={r.usuarioId}>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-base font-medium text-negro">{r.nombre}</p>
+                <span className="flex gap-1.5">
+                  {r.criticas > 0 && (
+                    <Insignia tono="critico">{r.criticas} críticas</Insignia>
+                  )}
+                  {r.avisos > 0 && (
+                    <Insignia tono="aviso">{r.avisos} avisos</Insignia>
+                  )}
+                </span>
+              </div>
+              <p className="text-menor text-metadato">{r.email}</p>
+
+              <ul className="mt-2 space-y-1.5">
+                {r.alertas.map((a, i) => (
+                  <li
+                    key={`${r.usuarioId}-${i}`}
+                    className="border-l-2 border-niebla pl-3"
+                  >
+                    <p className="text-chico font-medium text-negro">
+                      {a.titulo}
+                    </p>
+                    <p className="text-menor text-grafito">{a.detalle}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </HojaInferior>
   )
 }

@@ -6,7 +6,9 @@ import type { ProximoService } from '@/server/vehiculos/reglas'
 import { DOCUMENTOS_BLOQUEANTES } from '@/server/vehiculos/reglas'
 import {
   AvisoFijo,
+  Boton,
   Dato,
+  EnlaceBoton,
   EstadoVacio,
   FilaLista,
   GrillaResumen,
@@ -17,6 +19,7 @@ import {
   Pestanas,
   TituloSeccion,
 } from '@/components/ui'
+import { HojasVehiculo, type HojaVehiculo } from './HojasVehiculo'
 import {
   InsigniaEstadoVehiculo,
   InsigniaEstadoViaje,
@@ -54,11 +57,22 @@ export interface IndicadoresVehiculo {
 export function FichaVehiculo({
   vehiculo,
   indicadores,
+  puedeGestionar,
+  puedeCargarCombustible,
+  obras,
+  choferes,
 }: {
   vehiculo: VehiculoFicha
   indicadores: IndicadoresVehiculo
+  /** Logística y arriba: alta, documentos, service, estado, incidentes. */
+  puedeGestionar: boolean
+  /** El chofer también carga nafta, desde la ruta. */
+  puedeCargarCombustible: boolean
+  obras: Array<{ id: string; codigo: string; nombre: string }>
+  choferes: Array<{ id: string; nombre: string; apellido: string }>
 }) {
   const [pestana, setPestana] = useState('datos')
+  const [hoja, setHoja] = useState<HojaVehiculo | null>(null)
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
 
@@ -81,6 +95,59 @@ export function FichaVehiculo({
         )}
         {vehiculo.interno && <Insignia tono="neutro">{vehiculo.interno}</Insignia>}
       </div>
+
+      {(puedeGestionar || puedeCargarCombustible) && (
+        <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-3">
+          {puedeCargarCombustible && (
+            <Boton
+              tamano="chico"
+              variante="secundario"
+              onClick={() => setHoja('combustible')}
+            >
+              Combustible
+            </Boton>
+          )}
+          {puedeGestionar && (
+          <>
+          <Boton
+            tamano="chico"
+            variante="secundario"
+            onClick={() => setHoja('service')}
+          >
+            Mantenimiento
+          </Boton>
+          <Boton
+            tamano="chico"
+            variante="secundario"
+            onClick={() => setHoja('documento')}
+          >
+            Documento
+          </Boton>
+          <Boton
+            tamano="chico"
+            variante="secundario"
+            onClick={() => setHoja('incidente')}
+          >
+            Incidente
+          </Boton>
+          <Boton
+            tamano="chico"
+            variante="secundario"
+            onClick={() => setHoja('estado')}
+          >
+            Estado
+          </Boton>
+          <EnlaceBoton
+            tamano="chico"
+            variante="fantasma"
+            href={`/vehiculos/${vehiculo.id}/editar`}
+          >
+            Editar
+          </EnlaceBoton>
+          </>
+          )}
+        </div>
+      )}
 
       {bloqueantesVencidos.length > 0 && (
         <div className="px-4 pt-4">
@@ -220,6 +287,21 @@ export function FichaVehiculo({
       {/* --------------------------- DOCUMENTACIÓN ------------------------ */}
       {pestana === 'documentacion' && (
         <>
+          <TituloSeccion
+            accion={
+              puedeGestionar ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('documento')}
+                >
+                  Cargar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Documentación
+          </TituloSeccion>
           {vehiculo.documentos.length === 0 ? (
             <EstadoVacio
               titulo="Sin documentación cargada"
@@ -343,6 +425,22 @@ export function FichaVehiculo({
             </ListaDatos>
           </div>
 
+          <TituloSeccion
+            accion={
+              puedeCargarCombustible ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('combustible')}
+                >
+                  Cargar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Cargas
+          </TituloSeccion>
+
           {vehiculo.cargas.length === 0 ? (
             <EstadoVacio
               titulo="Sin cargas registradas"
@@ -400,6 +498,22 @@ export function FichaVehiculo({
             </p>
           </div>
 
+          <TituloSeccion
+            accion={
+              puedeGestionar ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('service')}
+                >
+                  Registrar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Historial
+          </TituloSeccion>
+
           {vehiculo.mantenimientos.length === 0 ? (
             <EstadoVacio
               titulo="Sin mantenimientos registrados"
@@ -429,6 +543,21 @@ export function FichaVehiculo({
       {/* ---------------------------- INCIDENTES -------------------------- */}
       {pestana === 'incidentes' && (
         <>
+          <TituloSeccion
+            accion={
+              puedeGestionar ? (
+                <Boton
+                  tamano="chico"
+                  variante="secundario"
+                  onClick={() => setHoja('incidente')}
+                >
+                  Registrar
+                </Boton>
+              ) : undefined
+            }
+          >
+            Incidentes
+          </TituloSeccion>
           {vehiculo.incidentes.length === 0 ? (
             <EstadoVacio
               titulo="Sin incidentes"
@@ -463,6 +592,14 @@ export function FichaVehiculo({
           )}
         </>
       )}
+
+      <HojasVehiculo
+        hoja={hoja}
+        alCerrar={() => setHoja(null)}
+        vehiculo={vehiculo}
+        obras={obras}
+        choferes={choferes}
+      />
     </div>
   )
 }

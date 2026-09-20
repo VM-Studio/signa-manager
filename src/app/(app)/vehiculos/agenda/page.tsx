@@ -1,9 +1,11 @@
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { sesionConPermiso } from '@/lib/auth/pantalla'
+import { puede } from '@/lib/auth/permisos'
 import { agendaDelDia } from '@/server/vehiculos/queries'
 import { SinPermiso } from '@/components/app/SinPermiso'
 import {
+  BotonFlotante,
   EncabezadoPantalla,
   EstadoVacio,
   TituloSeccion,
@@ -29,6 +31,7 @@ export default async function PaginaAgenda({
   fecha.setHours(0, 0, 0, 0)
 
   const vehiculos = await agendaDelDia(fecha)
+  const puedeAsignar = puede(sesion, 'vehiculos.aprobar')
 
   const otroDia = (dias: number) => {
     const d = new Date(fecha)
@@ -70,7 +73,11 @@ export default async function PaginaAgenda({
         <EstadoVacio
           titulo="No hay viajes este día"
           mensaje="Asigná una solicitud o creá un viaje directo."
-          accion={{ texto: 'Ver solicitudes', href: '/vehiculos/solicitudes' }}
+          accion={
+            puedeAsignar
+              ? { texto: 'Crear un viaje', href: '/vehiculos/viajes/nuevo' }
+              : { texto: 'Ver solicitudes', href: '/vehiculos/solicitudes' }
+          }
         />
       ) : (
         <>
@@ -170,6 +177,14 @@ export default async function PaginaAgenda({
             para abrir el viaje.
           </p>
         </>
+      )}
+
+      {puedeAsignar && (
+        <BotonFlotante
+          href="/vehiculos/viajes/nuevo"
+          icono={<Plus aria-hidden className="size-5" />}
+          etiqueta="Nuevo viaje"
+        />
       )}
     </div>
   )

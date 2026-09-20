@@ -1,5 +1,10 @@
-export { Boton } from './Boton'
-export type { BotonProps, VarianteBoton, TamanoBoton } from './Boton'
+export { Boton, EnlaceBoton, clasesBoton } from './Boton'
+export type {
+  BotonProps,
+  EnlaceBotonProps,
+  VarianteBoton,
+  TamanoBoton,
+} from './Boton'
 
 export {
   CampoTexto,

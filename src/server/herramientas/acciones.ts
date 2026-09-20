@@ -17,6 +17,7 @@ import { exigirSesion } from '@/lib/auth/sesion'
 import { exigirPermiso } from '@/lib/auth/permisos'
 import { registrarAuditoria } from '@/server/nucleo/auditoria'
 import { reevaluarModulos } from '@/lib/alertas/motor'
+import { numeroDeTexto } from '@/lib/formato'
 import {
   aplicarMovimiento,
   cambiosDeStock,
@@ -497,20 +498,6 @@ export async function accionPrevisualizarCsv(
     costoDiario: indice('costo diario', 'costo diario imputable'),
   }
 
-  const numero = (t: string | undefined): number | null => {
-    if (!t) return null
-    const limpio = t.replace(/[^\d.,\-]/g, '')
-    if (!limpio) return null
-    const ultimaComa = limpio.lastIndexOf(',')
-    const ultimoPunto = limpio.lastIndexOf('.')
-    const normalizado =
-      ultimaComa > ultimoPunto
-        ? limpio.replace(/\./g, '').replace(',', '.')
-        : limpio.replace(/,/g, '')
-    const n = Number(normalizado)
-    return Number.isFinite(n) ? n : null
-  }
-
   const filas: FilaCsv[] = lineas.slice(1).map((linea, i) => {
     const celdas = linea.split(separador).map((c) => c.trim().replace(/^"|"$/g, ''))
     const errores: string[] = []
@@ -538,8 +525,8 @@ export async function accionPrevisualizarCsv(
       marca: celdas[cols.marca] || null,
       modelo: celdas[cols.modelo] || null,
       nroSerie: celdas[cols.nroSerie] || null,
-      valorCompra: numero(celdas[cols.valorCompra]),
-      costoDiarioImputable: numero(celdas[cols.costoDiario]),
+      valorCompra: numeroDeTexto(celdas[cols.valorCompra]),
+      costoDiarioImputable: numeroDeTexto(celdas[cols.costoDiario]),
       errores,
     }
   })

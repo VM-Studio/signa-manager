@@ -123,17 +123,26 @@ export async function evaluarAlertas(
     }
   }
 
-  // 2. Las alertas que están abiertas hoy, de las reglas que corrieron.
+  /*
+   * 2. Las alertas que ya existen para las reglas que corrieron.
+   *
+   * Se traen TODAS, no solo las abiertas: `claveUnica` es única en la
+   * base, así que si un problema se resolvió y volvió a pasar (la
+   * herramienta volvió a salir a la misma obra parada) hay que reabrir
+   * la fila que ya está, no crear otra. Crear otra rompe la regla entera
+   * con un error de clave repetida.
+   */
   const reglasQueCorrieron = [...hallazgosPorRegla.keys()]
-  const abiertasAhora = await db.alerta.findMany({
-    where: {
-      reglaId: { in: reglasQueCorrieron },
-      estado: { in: [EstadoAlerta.ABIERTA, EstadoAlerta.VISTA] },
-    },
-    select: { id: true, claveUnica: true, reglaId: true },
+  const existentes = await db.alerta.findMany({
+    where: { reglaId: { in: reglasQueCorrieron } },
+    select: { id: true, claveUnica: true, reglaId: true, estado: true },
   })
 
-  const abiertasPorClave = new Map(abiertasAhora.map((a) => [a.claveUnica, a]))
+  const porClave = new Map(existentes.map((a) => [a.claveUnica, a]))
+  const abiertasAhora = existentes.filter(
+    (a) =>
+      a.estado === EstadoAlerta.ABIERTA || a.estado === EstadoAlerta.VISTA,
+  )
 
   // 3. Crear las nuevas y marcar cuáles siguen vigentes.
   const clavesVigentes = new Set<string>()
@@ -147,11 +156,13 @@ export async function evaluarAlertas(
     for (const h of hallazgos) {
       clavesVigentes.add(h.claveUnica)
 
-      const existente = abiertasPorClave.get(h.claveUnica)
+      const existente = porClave.get(h.claveUnica)
 
       if (existente) {
-        // Ya está abierta: no se duplica, pero se actualiza el detalle
-        // porque el problema pudo haber empeorado (más días de atraso).
+        const estabaAbierta =
+          existente.estado === EstadoAlerta.ABIERTA ||
+          existente.estado === EstadoAlerta.VISTA
+
         await db.alerta.update({
           where: { id: existente.id },
           data: {
@@ -159,8 +170,24 @@ export async function evaluarAlertas(
             detalle: h.detalle,
             severidad: h.severidad ?? configurada.severidad,
             enlace: h.enlace,
+            // Si estaba abierta, no se toca el estado: alguien pudo
+            // haberla marcado como vista. Si estaba resuelta o
+            // descartada, el problema volvió y se reabre.
+            ...(estabaAbierta
+              ? {}
+              : { estado: EstadoAlerta.ABIERTA, resueltaEn: null }),
           },
         })
+
+        if (!estabaAbierta) {
+          // Volvió a pasar: cuenta como nueva y hay que avisar de nuevo.
+          nuevas += 1
+          nuevasParaNotificar.push({ alertaId: existente.id, reglaId })
+
+          const fila = porRegla.find((p) => p.codigo === configurada.codigo)
+          if (fila) fila.nuevas += 1
+        }
+
         continue
       }
 

@@ -102,9 +102,11 @@ si se pierde la cuenta.
    choferes con su legajo. Se cargan desde **Más → Usuarios**.
 2. **Unidades de negocio y depósitos.** Ya están las cinco unidades; hay
    que confirmar los depósitos reales.
-3. **Empleados.** Son unos 60. Hay alta masiva por CSV en
-   **Personal → Empleados**... *no, todavía no:* la carga masiva está
-   hecha para herramientas, no para empleados. Ver el punto 6.
+3. **Empleados.** Son unos 60. Hay alta masiva por CSV con vista previa:
+   **Personal → Empleados → + → ícono de subir**. Las columnas
+   obligatorias son legajo, nombre, apellido, dni, categoría, valor hora
+   y fecha de ingreso. Verifica el dígito del CUIL y avisa fila por fila
+   antes de cargar nada.
 4. **Herramientas.** Acá sí hay carga masiva por CSV con vista previa:
    **Herramientas → Nueva → Cargar desde un archivo**. Van a ser
    cientos, así que conviene armar la planilla primero.
@@ -121,10 +123,6 @@ todo pegar las etiquetas.
 
 ## 6 · Cosas más chicas que van a pedir
 
-- **Alta masiva de empleados por CSV.** Está hecha para herramientas; el
-  código es reutilizable casi entero (`accionPrevisualizarCsv`).
-- **Edición de subcontratistas y cuadrillas desde la app.** Hoy se ven
-  pero se cargan por seed. Falta el formulario.
 - **Reabrir una quincena cerrada.** Hoy no se puede. Si cierran una por
   error, hay que tocar la base.
 - **Cambiar la propia contraseña.** Hoy la restablece administración.
@@ -151,6 +149,16 @@ todo pegar las etiquetas.
 - **Los empleados no están filtrados por obra.** Un capataz puede ver la
   ficha de cualquier empleado, incluido su valor hora. Hoy lo necesita
   para sumar gente al parte, pero si molesta se puede acotar.
+- **`personal.crear` y `personal.editar` los tiene también el capataz.**
+  La matriz de CLAUDE.md se los da porque los necesita para el parte
+  diario, pero de paso le habilitan el alta de empleados y el cambio de
+  valor hora. Si molesta, la solución limpia es partir el permiso en
+  `personal.parte` y `personal.legajo` en `src/lib/auth/permisos.ts`; son
+  dos líneas en la matriz y los `exigirPermiso` de
+  `src/server/personal/empleados.ts`. En vehículos ya está resuelto así:
+  la gestión de flota usa `vehiculos.aprobar` (dueño, administración y
+  logística) porque ahí `vehiculos.crear` significa "puede pedir un
+  viaje".
 - **El PDF del tablero** sale del "Guardar como PDF" del navegador, no de
   una librería. Funciona bien y no agrega 40 MB de dependencias, pero si
   quieren mandarlo por email automático va a hacer falta generarlo en el

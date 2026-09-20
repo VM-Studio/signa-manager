@@ -43,7 +43,15 @@ async function main() {
 
   ok(r.errores.length === 0, 'Ninguna regla falló')
 
-  // ---- Los problemas plantados en el prompt 2 ----
+  /*
+   * ---- Los problemas plantados en el prompt 2 ----
+   *
+   * Estos números salen del seed. Si alguno bajó, lo más probable es que
+   * se haya resuelto el problema desde la app (devolver una herramienta,
+   * renovar un documento) mientras se probaba: eso es el motor haciendo
+   * su trabajo, no una regresión. Para volver al punto de partida,
+   * `npm run db:seed`.
+   */
   console.log('  ── Los problemas plantados tienen que estar ──\n')
 
   const conteo = new Map(r.porRegla.map((p) => [p.codigo, p.hallazgos]))
@@ -83,12 +91,24 @@ async function main() {
   // ---- Se resuelven solas ----
   console.log('\n  ── Se resuelven solas ──\n')
 
+  // Marca de tiempo para poder deshacer exactamente lo que haga la prueba.
+  const desdeLaPrueba = new Date()
+
   const vencida = await db.herramienta.findFirst({
     where: {
       estado: 'EN_OBRA',
       fechaDevolucionPrevista: { lt: new Date(new Date().setHours(0, 0, 0, 0)) },
     },
-    select: { id: true, codigo: true, nombre: true, obraId: true },
+    select: {
+      id: true,
+      codigo: true,
+      nombre: true,
+      obraId: true,
+      depositoId: true,
+      responsableActualId: true,
+      fechaDevolucionPrevista: true,
+      condicion: true,
+    },
   })
 
   if (vencida) {
@@ -140,6 +160,78 @@ async function main() {
       `Al devolverla, la alerta pasó sola a RESUELTA (${alertaDespues?.estado})`,
     )
     ok(r3.resueltas >= 1, `El motor informó ${r3.resueltas} resuelta(s)`)
+
+    /*
+     * Se deja la herramienta como estaba.
+     *
+     * Sin esto, cada corrida del script devuelve una herramienta más y
+     * los problemas plantados en el seed se van apagando solos: a la
+     * cuarta corrida, las aserciones de arriba empiezan a fallar sin que
+     * nadie haya tocado el código.
+     */
+    await db.$transaction(async (tx) => {
+      await tx.movimientoHerramienta.deleteMany({
+        where: {
+          herramientaId: vencida.id,
+          tipo: 'DEVOLUCION',
+          fecha: { gte: desdeLaPrueba },
+        },
+      })
+      await tx.herramienta.update({
+        where: { id: vencida.id },
+        data: {
+          estado: 'EN_OBRA',
+          obraId: vencida.obraId,
+          depositoId: vencida.depositoId,
+          responsableActualId: vencida.responsableActualId,
+          fechaDevolucionPrevista: vencida.fechaDevolucionPrevista,
+        },
+      })
+      await tx.alerta.updateMany({
+        where: {
+          claveUnica: `HERRAMIENTA_NO_DEVUELTA:Herramienta:${vencida.id}`,
+        },
+        data: { estado: 'ABIERTA', resueltaEn: null },
+      })
+    })
+
+    const repuesta = await db.herramienta.findUnique({
+      where: { id: vencida.id },
+      select: { estado: true, obraId: true },
+    })
+    ok(
+      repuesta?.estado === 'EN_OBRA' && repuesta.obraId === vencida.obraId,
+      `${vencida.codigo} quedó como estaba: el script no ensucia el seed`,
+    )
+
+    /*
+     * Y el problema vuelve a pasar.
+     *
+     * `claveUnica` es única: si el motor intentara crear otra alerta en
+     * vez de reabrir la que ya está, se caería toda la regla con un
+     * error de clave repetida. Pasó de verdad.
+     */
+    await db.alerta.updateMany({
+      where: { claveUnica: `HERRAMIENTA_NO_DEVUELTA:Herramienta:${vencida.id}` },
+      data: { estado: 'RESUELTA', resueltaEn: new Date() },
+    })
+
+    const r4 = await evaluarAlertas(['herramientas'])
+    ok(r4.errores.length === 0, 'Un problema que vuelve no rompe la regla')
+
+    const reabierta = await db.alerta.findUnique({
+      where: { claveUnica: `HERRAMIENTA_NO_DEVUELTA:Herramienta:${vencida.id}` },
+      select: { estado: true, resueltaEn: true },
+    })
+    ok(
+      reabierta?.estado === 'ABIERTA' && reabierta.resueltaEn === null,
+      `La alerta se reabrió sola en vez de duplicarse (${reabierta?.estado})`,
+    )
+
+    const repetidas = await db.alerta.count({
+      where: { claveUnica: `HERRAMIENTA_NO_DEVUELTA:Herramienta:${vencida.id}` },
+    })
+    ok(repetidas === 1, `Sigue habiendo una sola fila para esa clave (${repetidas})`)
   }
 
   // ---- Notificaciones ----

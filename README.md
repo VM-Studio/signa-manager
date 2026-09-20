@@ -65,6 +65,7 @@ del sistema. Se corren con `npx tsx`:
 | `probar-obras.ts` | Que los campos del sistema base no se puedan editar |
 | `probar-herramientas.ts` | Las reglas de ubicación y movimientos |
 | `probar-partes.ts` | Las reglas del parte diario y las quincenas |
+| `probar-altas.ts` | El alta de empleados, cuadrillas y vehículos: CUIL, lectura del CSV, patentes y odómetro |
 | `probar-vehiculos.ts` | Las validaciones de asignación de viajes |
 | `probar-alertas.ts` | Que el motor encuentre los problemas y no duplique |
 | `probar-tablero.ts` | Que los totales del tablero cierren contra la base |

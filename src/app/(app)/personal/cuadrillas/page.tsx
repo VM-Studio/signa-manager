@@ -1,9 +1,12 @@
-import { Users } from 'lucide-react'
+import { Plus, Users } from 'lucide-react'
 import { sesionConPermiso } from '@/lib/auth/pantalla'
+import { puede } from '@/lib/auth/permisos'
 import { listarCuadrillas } from '@/server/personal/queries'
 import { SinPermiso } from '@/components/app/SinPermiso'
 import {
+  BotonFlotante,
   EncabezadoPantalla,
+  EnlaceBoton,
   EstadoVacio,
   FilaLista,
   Insignia,
@@ -17,6 +20,7 @@ export default async function PaginaCuadrillas() {
   if (!sesion) return <SinPermiso titulo="Cuadrillas" />
 
   const cuadrillas = await listarCuadrillas()
+  const puedeEditar = puede(sesion, 'personal.editar')
 
   return (
     <div className="pb-8">
@@ -27,19 +31,35 @@ export default async function PaginaCuadrillas() {
           titulo="Todavía no hay cuadrillas"
           mensaje="Armá la primera con su capataz y sus miembros."
           icono={<Users className="size-8" strokeWidth={1.5} />}
+          accion={
+            puede(sesion, 'personal.crear')
+              ? { texto: 'Armar cuadrilla', href: '/personal/cuadrillas/nueva' }
+              : undefined
+          }
         />
       ) : (
         cuadrillas.map((c) => (
           <div key={c.id}>
             <TituloSeccion
               accion={
-                c.asignaciones[0] ? (
-                  <Insignia tono="neutro">
-                    {c.asignaciones[0].obra.codigo}
-                  </Insignia>
-                ) : (
-                  <Insignia tono="aviso">Sin obra</Insignia>
-                )
+                <span className="flex items-center gap-2">
+                  {c.asignaciones[0] ? (
+                    <Insignia tono="neutro">
+                      {c.asignaciones[0].obra.codigo}
+                    </Insignia>
+                  ) : (
+                    <Insignia tono="aviso">Sin obra</Insignia>
+                  )}
+                  {puedeEditar && (
+                    <EnlaceBoton
+                      tamano="chico"
+                      variante="fantasma"
+                      href={`/personal/cuadrillas/${c.id}/editar`}
+                    >
+                      Editar
+                    </EnlaceBoton>
+                  )}
+                </span>
               }
             >
               {c.nombre}
@@ -70,6 +90,14 @@ export default async function PaginaCuadrillas() {
             </p>
           </div>
         ))
+      )}
+
+      {puede(sesion, 'personal.crear') && (
+        <BotonFlotante
+          href="/personal/cuadrillas/nueva"
+          icono={<Plus aria-hidden className="size-5" />}
+          etiqueta="Nueva cuadrilla"
+        />
       )}
     </div>
   )

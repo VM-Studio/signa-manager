@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { sesionConPermiso } from '@/lib/auth/pantalla'
+import { puede } from '@/lib/auth/permisos'
 import { listarVehiculos, resumenFlota } from '@/server/vehiculos/queries'
 import { SinPermiso } from '@/components/app/SinPermiso'
 import { ListaFlota } from '@/components/vehiculos/ListaFlota'
-import { EncabezadoPantalla } from '@/components/ui'
+import { BotonFlotante, EncabezadoPantalla } from '@/components/ui'
 
 export default async function PaginaVehiculos({
   searchParams,
@@ -57,6 +59,14 @@ export default async function PaginaVehiculos({
       </div>
 
       <ListaFlota vehiculos={vehiculos} resumen={resumen} focoInicial={foco} />
+
+      {puede(sesion, 'vehiculos.aprobar') && (
+        <BotonFlotante
+          href="/vehiculos/nuevo"
+          icono={<Plus aria-hidden className="size-5" />}
+          etiqueta="Nuevo vehículo"
+        />
+      )}
     </div>
   )
 }

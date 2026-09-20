@@ -921,3 +921,63 @@ export async function empleadosParaAgregar(obraId: string, fecha: Date) {
     orderBy: { apellido: 'asc' },
   })
 }
+
+/* ------------------------- AYUDAS PARA ALTAS ------------------------ */
+
+/**
+ * El próximo legajo libre.
+ *
+ * Los legajos de Signa son números correlativos. Se busca el mayor y se
+ * le suma uno; si alguno es alfanumérico simplemente se ignora.
+ */
+export async function siguienteLegajo(): Promise<string> {
+  const legajos = await db.empleado.findMany({ select: { legajo: true } })
+
+  const mayor = legajos.reduce((maximo, { legajo }) => {
+    const n = Number(legajo)
+    return Number.isInteger(n) && n > maximo ? n : maximo
+  }, 0)
+
+  return String(mayor + 1)
+}
+
+/** Obras abiertas, para los selectores de novedades y asignaciones. */
+export async function obrasParaSelector() {
+  return db.obra.findMany({
+    where: { estado: { in: ['EN_CURSO', 'PLANIFICADA', 'PAUSADA'] } },
+    select: { id: true, codigo: true, nombre: true },
+    orderBy: { codigo: 'asc' },
+  })
+}
+
+/** Empleados activos con su cuadrilla actual, para armar cuadrillas. */
+export async function empleadosParaCuadrilla() {
+  return db.empleado.findMany({
+    where: { activo: true },
+    select: {
+      id: true,
+      legajo: true,
+      nombre: true,
+      apellido: true,
+      categoria: true,
+      cuadrillas: {
+        where: { cuadrilla: { activa: true } },
+        select: { cuadrillaId: true, cuadrilla: { select: { nombre: true } } },
+      },
+    },
+    orderBy: [{ apellido: 'asc' }, { nombre: 'asc' }],
+  })
+}
+
+export async function obtenerCuadrilla(id: string) {
+  return db.cuadrilla.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      nombre: true,
+      activa: true,
+      capatazId: true,
+      miembros: { select: { empleadoId: true } },
+    },
+  })
+}

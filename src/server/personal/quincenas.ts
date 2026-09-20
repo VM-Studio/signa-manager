@@ -396,5 +396,9 @@ export async function accionRegistrarPago(
   })
 
   revalidatePath('/personal/quincenas')
+  if (empleadoId) revalidatePath(`/personal/empleados/${empleadoId}`)
+  if (subcontratistaId) {
+    revalidatePath(`/personal/subcontratistas/${subcontratistaId}`)
+  }
   return { ok: true, mensaje: 'Pago registrado' }
 }

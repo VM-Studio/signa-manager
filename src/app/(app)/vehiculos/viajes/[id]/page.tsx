@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { sesionConPermiso } from '@/lib/auth/pantalla'
+import { puede } from '@/lib/auth/permisos'
 import { obtenerViaje } from '@/server/vehiculos/queries'
 import { SinPermiso } from '@/components/app/SinPermiso'
+import { CancelarViaje } from '@/components/vehiculos/CancelarViaje'
 import {
   Dato,
   EncabezadoPantalla,
@@ -47,6 +49,14 @@ export default async function PaginaViaje({
       <div className="flex flex-wrap items-center gap-2 border-b border-niebla bg-blanco px-4 py-3">
         <InsigniaEstadoViaje estado={viaje.estado} />
       </div>
+
+      {puede(sesion, 'vehiculos.aprobar') && (
+        <CancelarViaje
+          viajeId={viaje.id}
+          estado={viaje.estado}
+          vieneDeSolicitud={viaje.solicitud !== null}
+        />
+      )}
 
       <TituloSeccion>El viaje</TituloSeccion>
       <div className="border-y border-niebla bg-blanco">

@@ -1,4 +1,5 @@
-import { Asistencia, EstadoParte } from '@prisma/client'
+import { Asistencia, CategoriaLaboral, EstadoParte } from '@prisma/client'
+import { numeroDeTexto } from '@/lib/formato'
 
 /* =====================================================================
    Reglas del parte diario y de las quincenas.
@@ -314,4 +315,129 @@ export function pendientesDeCierre(
   }
 
   return pendientes.sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
+}
+
+/* =====================================================================
+   Reglas del alta de personal.
+
+   Están acá, fuera del archivo de acciones, porque son funciones puras
+   y así se pueden probar sin base de datos.
+   ===================================================================== */
+
+/**
+ * ¿El CUIL o CUIT es válido?
+ *
+ * No alcanza con contar once números: el último es un dígito verificador
+ * y cargar uno inventado hace que después rebote la ART o el estudio
+ * contable, cuando ya es tarde.
+ */
+export function cuilValido(cuil: string): boolean {
+  const limpio = cuil.replace(/\D/g, '')
+  if (limpio.length !== 11) return false
+
+  const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+  const suma = limpio
+    .slice(0, 10)
+    .split('')
+    .reduce((a, d, i) => a + Number(d) * pesos[i], 0)
+
+  const resto = 11 - (suma % 11)
+  const esperado = resto === 11 ? 0 : resto === 10 ? 9 : resto
+  return esperado === Number(limpio[10])
+}
+
+export { numeroDeTexto }
+
+export function normalizarTexto(t: string): string {
+  return t
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+/** Los nombres de categoría como los escribe la gente, no como los guarda el enum. */
+const CATEGORIA_POR_TEXTO = new Map<string, CategoriaLaboral>([
+  ['oficial especializado', CategoriaLaboral.OFICIAL_ESPECIALIZADO],
+  ['of especializado', CategoriaLaboral.OFICIAL_ESPECIALIZADO],
+  ['oficial', CategoriaLaboral.OFICIAL],
+  ['medio oficial', CategoriaLaboral.MEDIO_OFICIAL],
+  ['medio of', CategoriaLaboral.MEDIO_OFICIAL],
+  ['ayudante', CategoriaLaboral.AYUDANTE],
+  ['peon', CategoriaLaboral.AYUDANTE],
+  ['sereno', CategoriaLaboral.SERENO],
+  ['capataz', CategoriaLaboral.CAPATAZ],
+  ['chofer', CategoriaLaboral.CHOFER],
+  ['administrativo', CategoriaLaboral.ADMINISTRATIVO],
+  ['otro', CategoriaLaboral.OTRO],
+])
+
+export function categoriaDeTexto(texto: string): CategoriaLaboral | null {
+  const limpio = normalizarTexto(texto)
+  if (!limpio) return null
+
+  const directa = CATEGORIA_POR_TEXTO.get(limpio)
+  if (directa) return directa
+
+  // También se acepta el nombre del enum tal cual, por si el archivo
+  // sale de una exportación del propio sistema.
+  const comoEnum = limpio.replace(/\s+/g, '_').toUpperCase()
+  return (Object.values(CategoriaLaboral) as string[]).includes(comoEnum)
+    ? (comoEnum as CategoriaLaboral)
+    : null
+}
+
+/** Acepta 2026-09-14, 14/09/2026 y 14-09-26. */
+export function fechaDeTexto(t: string | undefined): Date | null {
+  const limpio = (t ?? '').trim()
+  if (!limpio) return null
+
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(limpio)
+  if (iso) {
+    const d = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]))
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+
+  const criollo = /^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/.exec(limpio)
+  if (criollo) {
+    const anio = Number(criollo[3])
+    const d = new Date(
+      anio < 100 ? 2000 + anio : anio,
+      Number(criollo[2]) - 1,
+      Number(criollo[1]),
+    )
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+
+  return null
+}
+
+/**
+ * ¿Se puede sumar a esta gente a la cuadrilla?
+ *
+ * Regla de CLAUDE.md: un empleado está en una sola cuadrilla activa. Se
+ * revisa antes de guardar y se devuelve quién está dónde, para poder
+ * decirlo con nombre y apellido en vez de un "no se puede" seco.
+ */
+export interface ConflictoCuadrilla {
+  empleado: string
+  cuadrilla: string
+}
+
+export function conflictosDeCuadrilla(
+  candidatos: Array<{
+    empleadoId: string
+    nombre: string
+    cuadrillaActiva: string | null
+  }>,
+  elegidos: string[],
+): ConflictoCuadrilla[] {
+  const marcados = new Set(elegidos)
+
+  return candidatos
+    .filter((c) => marcados.has(c.empleadoId) && c.cuadrillaActiva !== null)
+    .map((c) => ({
+      empleado: c.nombre,
+      cuadrilla: c.cuadrillaActiva as string,
+    }))
 }

@@ -1,8 +1,10 @@
-import { Wrench } from 'lucide-react'
+import { Plus, Wrench } from 'lucide-react'
 import { sesionConPermiso } from '@/lib/auth/pantalla'
+import { puede } from '@/lib/auth/permisos'
 import { listarSubcontratistas } from '@/server/personal/queries'
 import { SinPermiso } from '@/components/app/SinPermiso'
 import {
+  BotonFlotante,
   EncabezadoPantalla,
   EstadoVacio,
   FilaLista,
@@ -56,6 +58,14 @@ export default async function PaginaSubcontratistas() {
             />
           ))}
         </Lista>
+      )}
+
+      {puede(sesion, 'personal.crear') && (
+        <BotonFlotante
+          href="/personal/subcontratistas/nuevo"
+          icono={<Plus aria-hidden className="size-5" />}
+          etiqueta="Nuevo subcontratista"
+        />
       )}
     </div>
   )
