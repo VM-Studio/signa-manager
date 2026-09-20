@@ -59,9 +59,13 @@ export default async function LayoutApp({
           {esDemo && <FranjaDemo />}
 
           {/* El padding de arriba deja lugar al header fijo y al área
-              segura del teléfono; el de abajo, a la barra inferior. */}
+              segura del teléfono; el de abajo, a la barra inferior.
+
+              El ancho lo maneja cada pantalla: las operativas se centran
+              en 480px (regla de CLAUDE.md) y el tablero se ensancha hasta
+              1100px con su propio contenedor. */}
           <div
-            className="mx-auto max-w-[var(--ancho-operativo)] pb-[calc(var(--alto-barra-inferior)+env(safe-area-inset-bottom,0px))]"
+            className="mx-auto max-w-[var(--ancho-operativo)] pb-[calc(var(--alto-barra-inferior)+env(safe-area-inset-bottom,0px))] has-[[data-ancho='tablero']]:max-w-[var(--ancho-tablero)]"
             style={{
               paddingTop: `calc(var(--alto-header) + env(safe-area-inset-top, 0px)${esDemo ? ' + 26px' : ''})`,
             }}

@@ -8,7 +8,7 @@ import {
   NumeroResumen,
   TituloSeccion,
 } from '@/components/ui'
-import { numero, plural } from '@/lib/formato'
+import { monedaCorta, numero, plural, porcentaje } from '@/lib/formato'
 
 export function InicioDueno({
   resumen,
@@ -19,6 +19,69 @@ export function InicioDueno({
 }) {
   return (
     <>
+      {resumen.sincronizacionAtrasada && (
+        <div className="px-4 pt-4">
+          <AvisoFijo tono="aviso" titulo="Datos posiblemente desactualizados">
+            La sincronización con el sistema base está atrasada.{' '}
+            <Link href="/mas/sincronizacion" className="underline">
+              Sincronizar
+            </Link>
+            .
+          </AvisoFijo>
+        </div>
+      )}
+
+      {/* Versión compacta del bloque 1 del tablero: el resultado del mes. */}
+      <TituloSeccion
+        accion={
+          <Link href="/tablero" className="text-menor text-grafito underline">
+            Ver el tablero
+          </Link>
+        }
+      >
+        Este mes
+      </TituloSeccion>
+      <div className="grid grid-cols-3 gap-px border-y border-niebla bg-niebla">
+        <div className="bg-blanco px-3 py-3">
+          <p className="text-menor text-grafito">Ingresos</p>
+          <p className="cifras mt-0.5 text-grande font-medium text-negro">
+            {monedaCorta(resumen.mes.ingresos)}
+          </p>
+        </div>
+        <div className="bg-blanco px-3 py-3">
+          <p className="text-menor text-grafito">Costos</p>
+          <p className="cifras mt-0.5 text-grande font-medium text-negro">
+            {monedaCorta(resumen.mes.costoTotal)}
+          </p>
+        </div>
+        <div className="bg-blanco px-3 py-3">
+          <p className="text-menor text-grafito">Resultado</p>
+          <p
+            className={`cifras mt-0.5 text-grande font-medium ${
+              resumen.mes.resultado < 0 ? 'text-critico' : 'text-correcto'
+            }`}
+          >
+            {monedaCorta(resumen.mes.resultado)}
+          </p>
+          <p className="text-micro text-acero">{porcentaje(resumen.mes.margen)}</p>
+        </div>
+      </div>
+
+      {resumen.mes.estructura > 0 && (
+        <p className="px-4 pt-2 text-menor text-acero">
+          Después de {monedaCorta(resumen.mes.estructura)} de estructura, el
+          resultado neto es{' '}
+          <span
+            className={
+              resumen.mes.resultadoNeto < 0 ? 'text-critico' : 'text-correcto'
+            }
+          >
+            {monedaCorta(resumen.mes.resultadoNeto)}
+          </span>
+          .
+        </p>
+      )}
+
       <TituloSeccion>La empresa hoy</TituloSeccion>
       <GrillaResumen columnas={2}>
         <NumeroResumen
@@ -67,6 +130,15 @@ export function InicioDueno({
           href="/herramientas/solicitudes"
         />
       </GrillaResumen>
+
+      {resumen.comprasEvitadas > 0 && (
+        <div className="px-4 pb-1">
+          <AvisoFijo tono="correcto" titulo="Compras evitadas este mes">
+            {monedaCorta(resumen.comprasEvitadas)} en herramientas que la
+            empresa ya tenía y se prestaron en vez de comprar.
+          </AvisoFijo>
+        </div>
+      )}
 
       <div className="px-4 pt-5">
         <Link

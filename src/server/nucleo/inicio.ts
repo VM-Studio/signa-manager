@@ -14,6 +14,8 @@ import {
 import { db } from '@/lib/db'
 import type { Sesion } from '@/lib/auth/sesion'
 import { obrasDeLaSesion } from '@/lib/auth/obras'
+import { armarPeriodo, calcularTablero } from '@/lib/calculos/tablero'
+import { comprasEvitadas } from '@/lib/calculos/herramientas'
 
 /* =====================================================================
    Las consultas del inicio, una por rol.
@@ -57,10 +59,22 @@ export interface ResumenEmpresa {
   alertasCriticas: number
   herramientasEnObra: number
   solicitudesPendientes: number
+  /** Versión compacta del bloque 1 del tablero: el resultado del mes. */
+  mes: {
+    ingresos: number
+    costoTotal: number
+    resultado: number
+    margen: number
+    estructura: number
+    resultadoNeto: number
+  }
+  comprasEvitadas: number
+  sincronizacionAtrasada: boolean
 }
 
 export async function resumenEmpresa(): Promise<ResumenEmpresa> {
   const ahora = new Date()
+  const periodo = armarPeriodo('este-mes')
 
   const [
     obrasEnCurso,
@@ -69,6 +83,8 @@ export async function resumenEmpresa(): Promise<ResumenEmpresa> {
     alertasCriticas,
     herramientasEnObra,
     solicitudesPendientes,
+    tablero,
+    evitadas,
   ] = await Promise.all([
     db.obra.count({ where: { estado: EstadoObra.EN_CURSO } }),
     db.asignacionObra.findMany({
@@ -92,6 +108,8 @@ export async function resumenEmpresa(): Promise<ResumenEmpresa> {
     db.solicitudHerramienta.count({
       where: { estado: EstadoSolicitudHerramienta.PENDIENTE },
     }),
+    calcularTablero(periodo),
+    comprasEvitadas(periodo.desde, periodo.hasta),
   ])
 
   return {
@@ -101,6 +119,16 @@ export async function resumenEmpresa(): Promise<ResumenEmpresa> {
     alertasCriticas,
     herramientasEnObra,
     solicitudesPendientes,
+    mes: {
+      ingresos: tablero.empresa.ingresos,
+      costoTotal: tablero.empresa.costoTotal,
+      resultado: tablero.empresa.resultado,
+      margen: tablero.empresa.margen,
+      estructura: tablero.empresa.estructura.total,
+      resultadoNeto: tablero.empresa.resultadoNeto,
+    },
+    comprasEvitadas: evitadas.monto,
+    sincronizacionAtrasada: tablero.sincronizacion.atrasada,
   }
 }
 
