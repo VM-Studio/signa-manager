@@ -101,6 +101,7 @@ export function ListaObras({
     {
       clave: 'unidad',
       titulo: 'Unidad de negocio',
+      desde: 'lg',
       ancho: '200px',
       comparar: (a, b) => a.unidadNegocio.localeCompare(b.unidadNegocio, 'es'),
       celda: (o) => <span className="text-grafito">{o.unidadNegocio}</span>,
@@ -108,20 +109,21 @@ export function ListaObras({
     {
       clave: 'cliente',
       titulo: 'Cliente',
-      soloAncho: true,
+      desde: 'xl',
       comparar: (a, b) => (a.cliente ?? '').localeCompare(b.cliente ?? '', 'es'),
       celda: (o) => o.cliente ?? <span className="text-acero">—</span>,
     },
     {
       clave: 'jefe',
       titulo: 'Jefe de obra',
+      desde: 'lg',
       comparar: (a, b) => (a.jefeObra ?? '').localeCompare(b.jefeObra ?? '', 'es'),
       celda: (o) => o.jefeObra ?? <span className="text-acero">Sin asignar</span>,
     },
     {
       clave: 'localidad',
       titulo: 'Localidad',
-      soloAncho: true,
+      desde: 'xl',
       comparar: (a, b) =>
         (a.localidad ?? '').localeCompare(b.localidad ?? '', 'es'),
       celda: (o) => o.localidad ?? <span className="text-acero">—</span>,

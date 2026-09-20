@@ -107,13 +107,14 @@ export function ListaHerramientas({
       clave: 'marca',
       titulo: 'Marca',
       ancho: '140px',
-      soloAncho: true,
+      desde: 'xl',
       comparar: porTexto((h) => h.marca),
       celda: (h) => h.marca ?? <span className="text-acero">—</span>,
     },
     {
       clave: 'categoria',
       titulo: 'Categoría',
+      desde: 'lg',
       ancho: '160px',
       comparar: porTexto((h) => h.categoria),
       celda: (h) => <span className="text-grafito">{h.categoria}</span>,
@@ -127,13 +128,14 @@ export function ListaHerramientas({
     {
       clave: 'responsable',
       titulo: 'Quién la tiene',
-      soloAncho: true,
+      desde: 'xl',
       comparar: porTexto((h) => h.responsable),
       celda: (h) => h.responsable ?? <span className="text-acero">—</span>,
     },
     {
       clave: 'devolucion',
       titulo: 'Devolución',
+      desde: 'lg',
       alineacion: 'derecha',
       ancho: '130px',
       comparar: (a, b) =>
@@ -151,6 +153,7 @@ export function ListaHerramientas({
     {
       clave: 'stock',
       titulo: 'Stock',
+      desde: 'lg',
       alineacion: 'derecha',
       ancho: '80px',
       comparar: (a, b) => (a.stockTotal ?? -1) - (b.stockTotal ?? -1),

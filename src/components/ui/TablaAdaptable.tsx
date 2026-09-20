@@ -39,10 +39,23 @@ export interface ColumnaTabla<T> {
    */
   comparar?: (a: T, b: T) => number
   /**
-   * Con true, la columna desaparece en tablet y solo se ve de 1280px
-   * para arriba. Para lo secundario, que en 1024px aprieta.
+   * Desde qué ancho se muestra la columna.
+   *
+   * - 'md' (por defecto): siempre que haya tabla, también en tablet.
+   * - 'lg': desde escritorio. Para lo que en 768px no entra.
+   * - 'xl': desde 1280px. Para lo secundario.
+   *
+   * Es lo que hace que la tabla de tablet sea una versión reducida y no
+   * la de escritorio apretada.
    */
-  soloAncho?: boolean
+  desde?: 'md' | 'lg' | 'xl'
+}
+
+/** Las clases que esconden una columna por debajo de su ancho. */
+const VISIBILIDAD: Record<'md' | 'lg' | 'xl', string> = {
+  md: '',
+  lg: 'hidden lg:table-cell',
+  xl: 'hidden xl:table-cell',
 }
 
 export interface TablaAdaptableProps<T> {
@@ -130,7 +143,7 @@ export function TablaAdaptable<T>({
   return (
     <div className={className}>
       {/* ------------------------- CELULAR ------------------------- */}
-      <div className="lg:hidden">
+      <div className="md:hidden">
         <ul className="border-y border-niebla bg-blanco">
           {mostrados.map((fila) => (
             <li key={claveFila(fila)} className="border-b border-niebla last:border-b-0">
@@ -141,7 +154,11 @@ export function TablaAdaptable<T>({
       </div>
 
       {/* ------------------------ ESCRITORIO ------------------------ */}
-      <div className="scroll-fino hidden overflow-x-auto border-y border-niebla bg-blanco lg:block">
+      {/* ------------------- TABLET Y ESCRITORIO -------------------
+
+          En tablet se muestran solo las columnas marcadas 'md': la
+          tabla reducida. Cada ancho va sumando las suyas. */}
+      <div className="scroll-fino hidden overflow-x-auto border-y border-niebla bg-blanco md:block">
         <table className="w-full border-collapse text-base">
           <thead>
             <tr className="border-b border-niebla">
@@ -159,7 +176,7 @@ export function TablaAdaptable<T>({
                       c.alineacion === 'derecha' && 'text-right',
                       c.alineacion === 'centro' && 'text-center',
                       !c.alineacion && 'text-left',
-                      c.soloAncho && 'hidden xl:table-cell',
+                      VISIBILIDAD[c.desde ?? 'md'],
                     )}
                     aria-sort={
                       activa
@@ -239,7 +256,7 @@ export function TablaAdaptable<T>({
                         'px-3 py-2.5 align-middle',
                         c.alineacion === 'derecha' && 'cifras text-right',
                         c.alineacion === 'centro' && 'text-center',
-                        c.soloAncho && 'hidden xl:table-cell',
+                        VISIBILIDAD[c.desde ?? 'md'],
                       )}
                     >
                       {c.celda(fila)}

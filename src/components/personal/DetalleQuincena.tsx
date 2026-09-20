@@ -147,7 +147,7 @@ export function DetalleQuincena({
     {
       clave: 'obras',
       titulo: 'Obras',
-      soloAncho: true,
+      desde: 'xl',
       celda: (e) => (
         <span className="text-grafito">{e.obras.join(', ') || '—'}</span>
       ),
@@ -155,6 +155,7 @@ export function DetalleQuincena({
     {
       clave: 'dias',
       titulo: 'Días',
+      desde: 'lg',
       alineacion: 'derecha',
       ancho: '70px',
       comparar: (a, b) => a.dias - b.dias,
@@ -171,6 +172,7 @@ export function DetalleQuincena({
     {
       clave: 'extra50',
       titulo: 'Al 50%',
+      desde: 'lg',
       alineacion: 'derecha',
       ancho: '85px',
       comparar: (a, b) => a.horasExtra50 - b.horasExtra50,
@@ -184,6 +186,7 @@ export function DetalleQuincena({
     {
       clave: 'extra100',
       titulo: 'Al 100%',
+      desde: 'lg',
       alineacion: 'derecha',
       ancho: '90px',
       comparar: (a, b) => a.horasExtra100 - b.horasExtra100,
@@ -199,7 +202,7 @@ export function DetalleQuincena({
       titulo: 'Ausencias',
       alineacion: 'derecha',
       ancho: '95px',
-      soloAncho: true,
+      desde: 'xl',
       comparar: (a, b) => a.ausencias - b.ausencias,
       celda: (e) =>
         e.ausencias > 0 ? (
@@ -219,6 +222,7 @@ export function DetalleQuincena({
     {
       clave: 'novedades',
       titulo: 'Novedades',
+      desde: 'lg',
       alineacion: 'derecha',
       ancho: '120px',
       comparar: (a, b) => a.novedades - b.novedades,

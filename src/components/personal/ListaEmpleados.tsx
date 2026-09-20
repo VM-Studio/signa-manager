@@ -93,6 +93,7 @@ export function ListaEmpleados({
     {
       clave: 'categoria',
       titulo: 'Categoría',
+      desde: 'lg',
       ancho: '170px',
       comparar: porTexto((e) => textoEnum(e.categoria)),
       celda: (e) => <span className="text-grafito">{textoEnum(e.categoria)}</span>,
@@ -100,7 +101,7 @@ export function ListaEmpleados({
     {
       clave: 'especialidad',
       titulo: 'Especialidad',
-      soloAncho: true,
+      desde: 'xl',
       comparar: porTexto((e) => e.especialidad),
       celda: (e) => e.especialidad ?? <span className="text-acero">—</span>,
     },
@@ -120,6 +121,7 @@ export function ListaEmpleados({
     {
       clave: 'valorHora',
       titulo: 'Valor hora',
+      desde: 'lg',
       alineacion: 'derecha',
       ancho: '120px',
       comparar: (a, b) => a.valorHora - b.valorHora,

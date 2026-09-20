@@ -121,12 +121,14 @@ export function ListaFlota({
     {
       clave: 'chofer',
       titulo: 'Chofer habitual',
+      desde: 'lg',
       comparar: (a, b) => (a.chofer ?? '').localeCompare(b.chofer ?? '', 'es'),
       celda: (v) => v.chofer ?? <span className="text-acero">Sin asignar</span>,
     },
     {
       clave: 'km',
       titulo: 'Kilómetros',
+      desde: 'lg',
       alineacion: 'derecha',
       ancho: '120px',
       comparar: (a, b) => a.kmActual - b.kmActual,
@@ -135,7 +137,7 @@ export function ListaFlota({
     {
       clave: 'donde',
       titulo: 'Dónde está',
-      soloAncho: true,
+      desde: 'xl',
       celda: (v) =>
         v.viajeActual ? (
           <span className="text-grafito">
@@ -149,6 +151,7 @@ export function ListaFlota({
     {
       clave: 'service',
       titulo: 'Service',
+      desde: 'lg',
       ancho: '120px',
       comparar: (a, b) => Number(a.serviceUrgente) - Number(b.serviceUrgente),
       celda: (v) =>
