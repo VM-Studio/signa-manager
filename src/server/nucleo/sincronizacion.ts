@@ -5,6 +5,7 @@ import { exigirSesion } from '@/lib/auth/sesion'
 import { exigirPermiso } from '@/lib/auth/permisos'
 import { sincronizar } from '@/lib/integracion/sincronizar'
 import { registrarAuditoria } from './auditoria'
+import { reevaluarModulos } from '@/lib/alertas/motor'
 import type { ResultadoSync } from '@/lib/integracion/sincronizar'
 
 /**
@@ -31,7 +32,11 @@ export async function accionSincronizarAhora(): Promise<ResultadoSync> {
     },
   })
 
+  // Los pedidos nuevos pueden traer problemas que hay que avisar ya.
+  await reevaluarModulos(['compras', 'sistema'])
+
   revalidatePath('/mas/sincronizacion')
+  revalidatePath('/alertas')
   revalidatePath('/obras')
   revalidatePath('/tablero')
 

@@ -17,6 +17,7 @@ import { exigirSesion } from '@/lib/auth/sesion'
 import { exigirPermiso } from '@/lib/auth/permisos'
 import { exigirAccesoAObra } from '@/lib/auth/obras'
 import { registrarAuditoria } from '@/server/nucleo/auditoria'
+import { reevaluarModulos } from '@/lib/alertas/motor'
 import {
   DOCUMENTOS_BLOQUEANTES,
   bloqueosDelChofer,
@@ -205,9 +206,13 @@ export async function accionAsignarViaje(
     despues: { viajeId: viaje.id, vehiculoId, choferId },
   })
 
+  // La alerta de "solicitud sin asignar" se cierra en el momento.
+  await reevaluarModulos(['vehiculos'])
+
   revalidatePath('/vehiculos/solicitudes')
   revalidatePath('/vehiculos/agenda')
   revalidatePath('/inicio')
+  revalidatePath('/alertas')
   return { ok: true, id: viaje.id, mensaje: 'Viaje asignado' }
 }
 
@@ -512,9 +517,13 @@ export async function accionFinalizarViaje(
     })
   })
 
+  // Cerrar el viaje resuelve la alerta de "viaje en curso demorado".
+  await reevaluarModulos(['vehiculos'])
+
   revalidatePath('/vehiculos/mis-viajes')
   revalidatePath('/vehiculos/ahora')
   revalidatePath('/inicio')
+  revalidatePath('/alertas')
   return { ok: true, mensaje: 'Viaje finalizado' }
 }
 

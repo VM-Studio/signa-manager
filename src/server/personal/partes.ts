@@ -13,6 +13,7 @@ import { exigirSesion } from '@/lib/auth/sesion'
 import { exigirPermiso } from '@/lib/auth/permisos'
 import { exigirAccesoAObra } from '@/lib/auth/obras'
 import { registrarAuditoria } from '@/server/nucleo/auditoria'
+import { reevaluarModulos } from '@/lib/alertas/motor'
 import {
   costoLinea,
   hayErrores,
@@ -274,9 +275,13 @@ export async function accionGuardarParte(
     return guardado
   })
 
+  // Cargar el parte cierra la alerta de "parte faltante".
+  if (datos.enviar) await reevaluarModulos(['personal'])
+
   revalidatePath('/personal/partes')
   revalidatePath('/inicio')
   revalidatePath(`/obras/${datos.obraId}`)
+  revalidatePath('/alertas')
 
   return {
     ok: true,
@@ -375,9 +380,14 @@ export async function accionAprobarParte(
     despues: { lineas: parte.lineas.length },
   })
 
+  // Aprobar cierra la alerta de "parte sin aprobar" y puede abrir la de
+  // presupuesto de mano de obra: las dos se reevalúan ahora.
+  await reevaluarModulos(['personal', 'obras'])
+
   revalidatePath('/personal/partes')
   revalidatePath(`/obras/${parte.obraId}`)
   revalidatePath('/inicio')
+  revalidatePath('/alertas')
 
   return { ok: true, mensaje: 'Parte aprobado' }
 }

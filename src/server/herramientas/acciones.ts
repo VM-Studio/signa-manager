@@ -16,6 +16,7 @@ import { db } from '@/lib/db'
 import { exigirSesion } from '@/lib/auth/sesion'
 import { exigirPermiso } from '@/lib/auth/permisos'
 import { registrarAuditoria } from '@/server/nucleo/auditoria'
+import { reevaluarModulos } from '@/lib/alertas/motor'
 import {
   aplicarMovimiento,
   cambiosDeStock,
@@ -182,9 +183,14 @@ export async function accionMoverHerramienta(
     despues: { accion: movimiento.accion, estado: plan.herramienta.estado },
   })
 
+  // La alerta de devolución vencida tiene que desaparecer ahora, no en
+  // la próxima corrida del cron.
+  await reevaluarModulos(['herramientas'])
+
   revalidatePath('/herramientas')
   revalidatePath(`/herramientas/${herramientaId}`)
   revalidatePath('/inicio')
+  revalidatePath('/alertas')
 
   return {
     ok: true,
@@ -749,8 +755,11 @@ export async function accionResolverConStock(
     }
   }
 
+  await reevaluarModulos(['herramientas'])
+
   revalidatePath('/herramientas/solicitudes')
   revalidatePath('/inicio')
+  revalidatePath('/alertas')
   return {
     ok: true,
     mensaje: `Resuelta con ${herramientas.length} herramienta${herramientas.length === 1 ? '' : 's'} propia${herramientas.length === 1 ? '' : 's'}`,
