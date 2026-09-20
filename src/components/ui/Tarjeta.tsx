@@ -120,13 +120,19 @@ export function GrillaResumen({
   className,
 }: {
   children: ReactNode
-  columnas?: 2 | 3 | 4
+  columnas?: 2 | 3 | 4 | 5
   className?: string
 }) {
+  /*
+   * En celular siempre dos columnas: con 380px de ancho, tres números
+   * ya no entran sin cortar el monto. En escritorio se abre a lo que
+   * pida cada pantalla, que es donde el ancho sobra.
+   */
   const grillas = {
     2: 'grid-cols-2',
-    3: 'grid-cols-3',
-    4: 'grid-cols-4',
+    3: 'grid-cols-2 sm:grid-cols-3',
+    4: 'grid-cols-2 lg:grid-cols-4',
+    5: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5',
   }
 
   return (
