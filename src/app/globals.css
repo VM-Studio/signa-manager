@@ -385,3 +385,37 @@ select.campo-select {
     animation: none;
   }
 }
+
+/* =====================================================================
+   Formularios largos
+   ===================================================================== */
+
+/* Una columna de campos en celular, dos en escritorio.
+
+   El alta de un empleado o de un vehículo tiene quince campos: en una
+   sola columna a 1920px queda una tira finita en el medio de la
+   pantalla y hay que scrollear de más para algo que entra de una. */
+.campos-formulario > * + * {
+  margin-top: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .campos-formulario {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    align-items: start;
+  }
+
+  .campos-formulario > * + * {
+    margin-top: 0;
+  }
+
+  /* Lo que necesita el renglón entero: textos largos y cualquier cosa
+     marcada a mano. Un campo solo NO se estira: un input de 900px de
+     ancho para escribir un número es peor que uno de 420px. */
+  .campos-formulario > .campo-ancho,
+  .campos-formulario > textarea {
+    grid-column: 1 / -1;
+  }
+}

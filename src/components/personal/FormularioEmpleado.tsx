@@ -73,7 +73,7 @@ export function FormularioEmpleado({
   const e = estado.errores ?? {}
 
   return (
-    <form action={ejecutar} className="pb-8">
+    <form action={ejecutar} className="pb-8 lg:max-w-[900px]">
       {estado.error && (
         <div className="px-4 pt-4">
           <AvisoFijo tono="critico">{estado.error}</AvisoFijo>
@@ -81,7 +81,7 @@ export function FormularioEmpleado({
       )}
 
       <TituloSeccion>Quién es</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="nombre"
           etiqueta="Nombre"
@@ -136,7 +136,7 @@ export function FormularioEmpleado({
       </div>
 
       <TituloSeccion>Trabajo</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="legajo"
           etiqueta="Legajo"
@@ -195,7 +195,7 @@ export function FormularioEmpleado({
       </div>
 
       <TituloSeccion>Talles</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="talleRopa"
           etiqueta="Talle de ropa"
@@ -213,7 +213,7 @@ export function FormularioEmpleado({
       </div>
 
       <TituloSeccion>En caso de accidente</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="contactoEmergenciaNombre"
           etiqueta="A quién avisar"

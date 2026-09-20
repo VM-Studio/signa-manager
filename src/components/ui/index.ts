@@ -21,8 +21,9 @@ export type { OpcionSelect } from './Campo'
 export { HojaInferior, HojaConfirmacion } from './HojaInferior'
 export { Insignia, PuntoEstado } from './Insignia'
 export type { TonoInsignia } from './Insignia'
-export { FilaLista, Lista } from './FilaLista'
+export { FilaLista, Lista, GrillaFichas } from './FilaLista'
 export { EncabezadoPantalla } from './EncabezadoPantalla'
+export { FichaDosColumnas } from './FichaDosColumnas'
 export {
   EstadoVacio,
   EstadoError,
@@ -37,6 +38,12 @@ export { Pestanas, PanelPestana } from './Pestanas'
 export type { Pestana } from './Pestanas'
 export { Buscador, ChipsFiltro, BarraFiltros } from './Buscador'
 export type { Chip } from './Buscador'
+export {
+  TablaAdaptable,
+  BarraFiltrosTabla,
+  useAtajoBuscar,
+} from './TablaAdaptable'
+export type { ColumnaTabla, TablaAdaptableProps } from './TablaAdaptable'
 export {
   Tarjeta,
   TituloSeccion,

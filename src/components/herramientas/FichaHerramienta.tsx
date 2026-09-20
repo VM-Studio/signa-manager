@@ -6,6 +6,7 @@ import type { HerramientaFicha } from '@/server/herramientas/queries'
 import {
   AvisoFijo,
   Dato,
+  FichaDosColumnas,
   FilaLista,
   Insignia,
   Lista,
@@ -75,8 +76,13 @@ export function FichaHerramienta({
 
   const ultimoMantenimiento = herramienta.mantenimientos[0] ?? null
 
-  return (
-    <div className="pb-8">
+  /*
+   * El panel de la derecha contesta "¿qué es y dónde está?", que es la
+   * pregunta que trae a esta pantalla. Los datos, el mantenimiento y el
+   * historial —que son listas largas— se llevan el ancho.
+   */
+  const panel = (
+    <>
       {/* Estado y avisos */}
       <div className="flex flex-wrap items-center gap-2 border-b border-niebla bg-blanco px-4 py-3">
         <InsigniaEstadoHerramienta estado={herramienta.estado} />
@@ -181,6 +187,41 @@ export function FichaHerramienta({
         puedeOperar={puedeOperar}
       />
 
+      {/* QR */}
+      <TituloSeccion
+        accion={
+          <Link
+            href={`/herramientas/etiquetas?ids=${herramienta.id}`}
+            className="flex items-center gap-1 text-menor text-grafito underline hover:text-negro"
+          >
+            <Printer aria-hidden className="size-3" />
+            Imprimir
+          </Link>
+        }
+      >
+        Código QR
+      </TituloSeccion>
+      <div className="flex flex-col items-center gap-2 border-y border-niebla bg-blanco px-4 py-5 lg:border-b-0">
+        <Image
+          src={qr}
+          alt={`Código QR de ${herramienta.codigo}`}
+          width={160}
+          height={160}
+          unoptimized
+          className="size-40"
+        />
+        <p className="cifras text-base font-medium text-negro">
+          {herramienta.codigo}
+        </p>
+        <p className="text-menor text-metadato">
+          Escaneándolo se abre esta ficha.
+        </p>
+      </div>
+    </>
+  )
+
+  return (
+    <FichaDosColumnas panel={panel} className="pb-8">
       {/* Datos */}
       <TituloSeccion
         accion={
@@ -219,37 +260,6 @@ export function FichaHerramienta({
         {herramienta.notas && (
           <p className="px-0 pb-4 text-chico text-grafito">{herramienta.notas}</p>
         )}
-      </div>
-
-      {/* QR */}
-      <TituloSeccion
-        accion={
-          <Link
-            href={`/herramientas/etiquetas?ids=${herramienta.id}`}
-            className="flex items-center gap-1 text-menor text-grafito underline"
-          >
-            <Printer aria-hidden className="size-3" />
-            Imprimir etiqueta
-          </Link>
-        }
-      >
-        Código QR
-      </TituloSeccion>
-      <div className="flex flex-col items-center gap-2 border-y border-niebla bg-blanco px-4 py-5">
-        <Image
-          src={qr}
-          alt={`Código QR de ${herramienta.codigo}`}
-          width={160}
-          height={160}
-          unoptimized
-          className="size-40"
-        />
-        <p className="cifras text-base font-medium text-negro">
-          {herramienta.codigo}
-        </p>
-        <p className="text-menor text-metadato">
-          Escaneándolo se abre esta ficha.
-        </p>
       </div>
 
       {/* Mantenimiento */}
@@ -340,6 +350,6 @@ export function FichaHerramienta({
           )
         })}
       </Lista>
-    </div>
+    </FichaDosColumnas>
   )
 }

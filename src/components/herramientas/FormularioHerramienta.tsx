@@ -76,7 +76,7 @@ export function FormularioHerramienta({
   const esPorCantidad = tipo === TipoControlHerramienta.CANTIDAD
 
   return (
-    <form action={ejecutar} className="pb-8">
+    <form action={ejecutar} className="pb-8 lg:max-w-[900px]">
       {estado.error && (
         <div className="px-4 pt-4">
           <AvisoFijo tono="critico">{estado.error}</AvisoFijo>
@@ -84,7 +84,7 @@ export function FormularioHerramienta({
       )}
 
       <TituloSeccion>Qué es</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="codigo"
           etiqueta="Código"
@@ -152,7 +152,7 @@ export function FormularioHerramienta({
       </div>
 
       <TituloSeccion>Compra</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoFecha
           name="fechaCompra"
           etiqueta="Fecha de compra"
@@ -180,7 +180,7 @@ export function FormularioHerramienta({
       </div>
 
       <TituloSeccion>Mantenimiento</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoNumero
           name="mantenimientoCadaDias"
           etiqueta="Mantenimiento cada"
@@ -193,7 +193,7 @@ export function FormularioHerramienta({
       {!esEdicion && (
         <>
           <TituloSeccion>Dónde queda</TituloSeccion>
-          <div className="space-y-4 px-4">
+          <div className="campos-formulario px-4">
             <CampoSelect
               name="depositoId"
               etiqueta="Depósito"

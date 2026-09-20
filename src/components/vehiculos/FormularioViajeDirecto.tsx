@@ -86,7 +86,7 @@ export function FormularioViajeDirecto({
     kilos > elegido.capacidadCargaKg
 
   return (
-    <form action={ejecutar} className="pb-8">
+    <form action={ejecutar} className="pb-8 lg:max-w-[900px]">
       {estado.error && (
         <div className="px-4 pt-4">
           <AvisoFijo tono="critico" titulo="No se puede crear así">
@@ -96,7 +96,7 @@ export function FormularioViajeDirecto({
       )}
 
       <TituloSeccion>Quién lo hace</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoSelect
           name="vehiculoId"
           etiqueta="Vehículo"
@@ -127,7 +127,7 @@ export function FormularioViajeDirecto({
       </div>
 
       <TituloSeccion>A dónde va</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoSelect
           name="tipo"
           etiqueta="Qué va a hacer"
@@ -171,7 +171,7 @@ export function FormularioViajeDirecto({
       </div>
 
       <TituloSeccion>Qué lleva</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTextoLargo
           name="descripcionCarga"
           etiqueta="Carga"

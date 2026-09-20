@@ -62,7 +62,7 @@ export function FormularioSubcontratista({
   const e = estado.errores ?? {}
 
   return (
-    <form action={ejecutar} className="pb-8">
+    <form action={ejecutar} className="pb-8 lg:max-w-[900px]">
       {estado.error && (
         <div className="px-4 pt-4">
           <AvisoFijo tono="critico">{estado.error}</AvisoFijo>
@@ -70,7 +70,7 @@ export function FormularioSubcontratista({
       )}
 
       <TituloSeccion>La empresa</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="razonSocial"
           etiqueta="Razón social"
@@ -101,7 +101,7 @@ export function FormularioSubcontratista({
       </div>
 
       <TituloSeccion>Con quién se habla</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="contacto"
           etiqueta="Nombre del contacto"

@@ -7,8 +7,8 @@ import {
   EncabezadoPantalla,
   EstadoVacio,
   FilaLista,
+  GrillaFichas,
   Insignia,
-  Lista,
   TituloSeccion,
 } from '@/components/ui'
 import { moneda, monedaCorta, numero, plural } from '@/lib/formato'
@@ -86,7 +86,7 @@ export default async function PaginaUbicaciones() {
                 </AvisoFijo>
               </div>
               <TituloSeccion>Obras sin actividad</TituloSeccion>
-              <Lista>{destacadas.map(fila)}</Lista>
+              <GrillaFichas>{destacadas.map(fila)}</GrillaFichas>
             </>
           )}
 
@@ -98,7 +98,7 @@ export default async function PaginaUbicaciones() {
               icono={<AlertTriangle className="size-8" strokeWidth={1.5} />}
             />
           ) : (
-            <Lista>{depositos.map(fila)}</Lista>
+            <GrillaFichas>{depositos.map(fila)}</GrillaFichas>
           )}
 
           <TituloSeccion>Obras en curso</TituloSeccion>
@@ -108,7 +108,7 @@ export default async function PaginaUbicaciones() {
               mensaje="Está todo en el depósito."
             />
           ) : (
-            <Lista>{obras.map(fila)}</Lista>
+            <GrillaFichas>{obras.map(fila)}</GrillaFichas>
           )}
         </>
       )}

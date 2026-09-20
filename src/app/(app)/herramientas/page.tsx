@@ -1,4 +1,4 @@
-import { QrCode } from 'lucide-react'
+import { Plus, QrCode } from 'lucide-react'
 import Link from 'next/link'
 import { EstadoHerramienta } from '@prisma/client'
 import { sesionConPermiso } from '@/lib/auth/pantalla'
@@ -10,7 +10,11 @@ import {
 } from '@/server/herramientas/queries'
 import { SinPermiso } from '@/components/app/SinPermiso'
 import { ListaHerramientas } from '@/components/herramientas/ListaHerramientas'
-import { BotonFlotante, EncabezadoPantalla } from '@/components/ui'
+import {
+  BotonFlotante,
+  EncabezadoPantalla,
+  EnlaceBoton,
+} from '@/components/ui'
 
 export default async function PaginaHerramientas({
   searchParams,
@@ -41,10 +45,36 @@ export default async function PaginaHerramientas({
 
   return (
     <div className="pb-24">
-      <EncabezadoPantalla titulo="Herramientas" sinVolver />
+      <EncabezadoPantalla
+        titulo="Herramientas"
+        sinVolver
+        accion={
+          <div className="hidden items-center gap-2 lg:flex">
+            <EnlaceBoton
+              tamano="chico"
+              href="/herramientas/escanear"
+              iconoIzquierda={<QrCode aria-hidden className="size-4" />}
+            >
+              Escanear
+            </EnlaceBoton>
+            {puede(sesion, 'herramientas.crear') && (
+              <EnlaceBoton
+                tamano="chico"
+                variante="primario"
+                href="/herramientas/nueva"
+                iconoIzquierda={<Plus aria-hidden className="size-4" />}
+              >
+                Nueva herramienta
+              </EnlaceBoton>
+            )}
+          </div>
+        }
+      />
 
-      {/* Accesos del módulo: lo que el pañolero usa todos los días. */}
-      <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-2.5">
+      {/* Accesos del módulo: lo que el pañolero usa todos los días.
+          En escritorio no van: las mismas pantallas están en las
+          pestañas de la barra superior y repetirlas es ruido. */}
+      <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-2.5 lg:hidden">
         {[
           { href: '/herramientas/solicitudes', texto: 'Solicitudes' },
           { href: '/herramientas/ubicaciones', texto: 'Ubicaciones' },

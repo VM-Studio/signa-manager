@@ -80,9 +80,14 @@ export function FilaLista({
     </>
   )
 
+  const cliqueable = Boolean(href || alTocar)
+
   const clases = cn(
     'flex w-full min-h-[var(--toque-minimo)] items-center gap-3 bg-blanco px-4 py-3 text-left',
     'transition-colors active:bg-hueso',
+    // El realce solo con mouse: en el celular quedaría pegado después
+    // de tocar.
+    cliqueable && 'cursor-pointer hover:bg-hueso',
     tonosBarra[tono],
     className,
   )
@@ -118,6 +123,38 @@ export function Lista({
     <div
       className={cn(
         'divide-y divide-niebla border-y border-niebla bg-blanco',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------------
+   Grilla de fichas.
+
+   Las mismas filas, pero como tarjetas cuando hay ancho: lo usan la
+   vista por ubicación de herramientas y "En este momento" de vehículos,
+   donde lo que se mira es un panorama y no una lista para recorrer.
+
+   En celular es exactamente la lista de siempre.
+   --------------------------------------------------------------------- */
+
+export function GrillaFichas({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'divide-y divide-niebla border-y border-niebla bg-blanco',
+        'md:grid md:gap-3 md:divide-y-0 md:border-0 md:bg-transparent md:px-4 md:py-3',
+        'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+        '[&>*]:md:rounded-[var(--radius-panel)] [&>*]:md:border [&>*]:md:border-niebla',
         className,
       )}
     >

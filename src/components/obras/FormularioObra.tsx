@@ -93,7 +93,7 @@ export function FormularioObra({
   const e = estado.errores ?? {}
 
   return (
-    <form action={ejecutar} className="pb-8">
+    <form action={ejecutar} className="pb-8 lg:max-w-[900px]">
       {estado.error && (
         <div className="px-4 pt-4">
           <AvisoFijo tono="critico">{estado.error}</AvisoFijo>
@@ -115,7 +115,7 @@ export function FormularioObra({
       <TituloSeccion>
         {delSistemaBase ? 'Datos del sistema base' : 'Datos de la obra'}
       </TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="codigo"
           etiqueta="Código de obra"
@@ -233,7 +233,7 @@ export function FormularioObra({
       <TituloSeccion>
         {delSistemaBase ? 'Lo que se carga en esta app' : 'Obra y ubicación'}
       </TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoSelect
           name="jefeObraId"
           etiqueta="Jefe de obra"

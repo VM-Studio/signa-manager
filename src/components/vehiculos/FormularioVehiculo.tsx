@@ -81,7 +81,7 @@ export function FormularioVehiculo({
   const esMaquina = tipo === TipoVehiculo.MAQUINA_VIAL
 
   return (
-    <form action={ejecutar} className="pb-8">
+    <form action={ejecutar} className="pb-8 lg:max-w-[900px]">
       {estado.error && (
         <div className="px-4 pt-4">
           <AvisoFijo tono="critico">{estado.error}</AvisoFijo>
@@ -89,7 +89,7 @@ export function FormularioVehiculo({
       )}
 
       <TituloSeccion>Qué es</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoTexto
           name="patente"
           etiqueta="Patente"
@@ -152,7 +152,7 @@ export function FormularioVehiculo({
       </div>
 
       <TituloSeccion>Qué puede llevar</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoNumero
           name="capacidadCargaKg"
           etiqueta="Capacidad de carga"
@@ -180,7 +180,7 @@ export function FormularioVehiculo({
       </div>
 
       <TituloSeccion>Uso y costo</TituloSeccion>
-      <div className="space-y-4 px-4">
+      <div className="campos-formulario px-4">
         <CampoNumero
           name="kmActual"
           etiqueta="Kilómetros"
