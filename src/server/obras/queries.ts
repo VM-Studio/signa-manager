@@ -4,12 +4,12 @@ import {
   EstadoHerramienta,
   EstadoObra,
   EstadoParte,
-  EstadoViaje,
   OrigenDato,
   Prisma,
 } from '@prisma/client'
 import { db } from '@/lib/db'
 import { costoHerramientasDeObra } from '@/lib/calculos/herramientas'
+import { costoVehiculosDeObra } from '@/lib/calculos/vehiculos'
 import type { Sesion } from '@/lib/auth/token'
 import { obrasDeLaSesion } from '@/lib/auth/obras'
 
@@ -371,14 +371,7 @@ export async function vehiculosDeObra(obraId: string) {
       orderBy: { salidaPrevista: 'desc' },
       take: 25,
     }),
-    db.viaje.aggregate({
-      _sum: { costoCalculado: true },
-      where: {
-        obraId,
-        estado: EstadoViaje.FINALIZADO,
-        salidaPrevista: { gte: inicioDelMes },
-      },
-    }),
+    costoVehiculosDeObra(obraId, inicioDelMes, ahora),
     db.solicitudViaje.count({ where: { obraId, estado: 'PENDIENTE' } }),
   ])
 
@@ -387,7 +380,7 @@ export async function vehiculosDeObra(obraId: string) {
       ...v,
       costoCalculado: Number(v.costoCalculado ?? 0),
     })),
-    costoDelMes: Number(costoDelMes._sum.costoCalculado ?? 0),
+    costoDelMes,
     solicitudesPendientes,
   }
 }

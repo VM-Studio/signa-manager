@@ -85,6 +85,8 @@ const TITULOS: Array<[string, string]> = [
   ['/vehiculos/agenda', 'Agenda'],
   ['/vehiculos/ahora', 'En este momento'],
   ['/vehiculos/mis-viajes', 'Mis viajes'],
+  ['/vehiculos/vencimientos', 'Vencimientos'],
+  ['/vehiculos/viajes', 'Viaje'],
   ['/vehiculos', 'Vehículos'],
   ['/obras', 'Obras'],
   ['/alertas', 'Alertas'],
