@@ -421,16 +421,21 @@ function PanelHerramientas({ datos }: { datos: Herramientas }) {
 
   return (
     <>
-      <GrillaResumen columnas={2}>
+      <GrillaResumen columnas={3}>
         <NumeroResumen
           etiqueta="Herramientas"
           valor={numero(datos.unitarias.length)}
           detalle={valorTotal > 0 ? `${monedaCorta(valorTotal)} en valor` : undefined}
         />
         <NumeroResumen
-          etiqueta="Devoluciones vencidas"
+          etiqueta="Vencidas"
           valor={numero(vencidas.length)}
           tono={vencidas.length > 0 ? 'critico' : 'neutro'}
+        />
+        <NumeroResumen
+          etiqueta="Costo del mes"
+          valor={monedaCorta(datos.costoImputado)}
+          detalle="días en obra"
         />
       </GrillaResumen>
 

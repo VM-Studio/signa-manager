@@ -9,6 +9,7 @@ import {
   Prisma,
 } from '@prisma/client'
 import { db } from '@/lib/db'
+import { costoHerramientasDeObra } from '@/lib/calculos/herramientas'
 import type { Sesion } from '@/lib/auth/token'
 import { obrasDeLaSesion } from '@/lib/auth/obras'
 
@@ -305,7 +306,11 @@ export async function herramientasDeObra(obraId: string) {
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
 
-  const [unitarias, existencias] = await Promise.all([
+  // El costo que la obra lleva pagado en herramientas este mes:
+  // días en obra × costo diario imputable.
+  const inicioDelMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
+
+  const [unitarias, existencias, costoImputado] = await Promise.all([
     db.herramienta.findMany({
       where: { obraId, estado: EstadoHerramienta.EN_OBRA },
       select: {
@@ -328,6 +333,7 @@ export async function herramientasDeObra(obraId: string) {
         herramienta: { select: { id: true, codigo: true, nombre: true } },
       },
     }),
+    costoHerramientasDeObra(obraId, inicioDelMes, hoy),
   ])
 
   return {
@@ -338,6 +344,7 @@ export async function herramientasDeObra(obraId: string) {
         h.fechaDevolucionPrevista !== null && h.fechaDevolucionPrevista < hoy,
     })),
     existencias,
+    costoImputado,
   }
 }
 

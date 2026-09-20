@@ -66,6 +66,9 @@ export const SECCIONES_MAS: Array<{
 const TITULOS: Array<[string, string]> = [
   ['/inicio', 'Inicio'],
   ['/herramientas/solicitudes', 'Solicitudes'],
+  ['/herramientas/mantenimiento', 'Mantenimiento'],
+  ['/herramientas/importar', 'Carga masiva'],
+  ['/herramientas/nueva', 'Nueva herramienta'],
   ['/herramientas/escanear', 'Escanear'],
   ['/herramientas/etiquetas', 'Etiquetas'],
   ['/herramientas/ubicaciones', 'Ubicaciones'],
