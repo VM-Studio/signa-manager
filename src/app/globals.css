@@ -1,26 +1,244 @@
 @import "tailwindcss";
 
+/* =====================================================================
+   SIGNA · sistema de diseño
+   Negro, blanco y gris. Color solo para estados, nunca decorativo.
+   Móvil primero: todo pensado para 380px de ancho y para usarse con
+   guantes, al sol, con una sola mano.
+   ===================================================================== */
+
+@theme {
+  /* --- escala de negro a blanco (tokens de CLAUDE.md) --- */
+  --color-negro: #000000;
+  --color-carbon: #1a1a1a;
+  --color-grafito: #4a4a4a;
+  --color-acero: #8c8c8c;
+  --color-niebla: #e6e6e6;
+  --color-hueso: #f5f5f5;
+  --color-blanco: #ffffff;
+
+  /* --- estados: siempre acompañados de texto o ícono --- */
+  --color-correcto: #1f7a4d;
+  --color-correcto-suave: #e8f3ed;
+  --color-aviso: #b7791f;
+  --color-aviso-suave: #fbf2e3;
+  --color-critico: #b42318;
+  --color-critico-suave: #fbeae8;
+
+  /* --- tipografía --- */
+  --font-sans: var(--fuente-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  /* Escala chica, pensada para móvil. El cuerpo base es 16px para que
+     iOS no haga zoom automático al enfocar un campo. */
+  --text-micro: 0.6875rem;      /* 11px · etiquetas de insignia */
+  --text-micro--line-height: 1rem;
+  --text-menor: 0.75rem;        /* 12px · metadatos, ayudas */
+  --text-menor--line-height: 1.125rem;
+  --text-chico: 0.8125rem;      /* 13px · subtítulos de lista */
+  --text-chico--line-height: 1.25rem;
+  --text-base: 0.9375rem;       /* 15px · texto de interfaz */
+  --text-base--line-height: 1.375rem;
+  --text-cuerpo: 1rem;          /* 16px · campos de formulario (evita el zoom de iOS) */
+  --text-cuerpo--line-height: 1.5rem;
+  --text-titulo: 1.0625rem;     /* 17px · títulos de pantalla */
+  --text-titulo--line-height: 1.375rem;
+  --text-grande: 1.375rem;      /* 22px · números destacados */
+  --text-grande--line-height: 1.625rem;
+  --text-cifra: 1.75rem;        /* 28px · cifras del tablero */
+  --text-cifra--line-height: 2rem;
+  --text-cifra-xl: 2.25rem;     /* 36px · cifra protagonista */
+  --text-cifra-xl--line-height: 2.5rem;
+
+  /* --- radios: 6px en controles, 0 en listas --- */
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --radius-hoja: 14px;
+
+  /* --- medidas de la app --- */
+  --espaciado-app: 16px;        /* gutter lateral */
+  --alto-header: 52px;
+  --alto-barra-inferior: 60px;
+  --ancho-operativo: 480px;     /* pantallas operativas en escritorio */
+  --ancho-tablero: 1100px;      /* solo el tablero */
+  --toque-minimo: 48px;         /* alto mínimo de todo lo que se toca */
+}
+
+/* =====================================================================
+   Base
+   ===================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  /* Alto real de la ventana en móvil, sin la barra del navegador. */
+  --alto-visible: 100dvh;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background-color: var(--color-negro);
+  /* Evita que iOS agrande el texto al girar el teléfono. */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-hueso);
+  color: var(--color-negro);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-feature-settings: "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Nada se desborda hacia los costados. */
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+/* Números alineados en columnas: montos, horas, cantidades. */
+.cifras {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* =====================================================================
+   Foco visible · accesibilidad
+   Se usa en obra, con sol y con guantes: el foco tiene que verse.
+   ===================================================================== */
+
+:focus-visible {
+  outline: 2px solid var(--color-negro);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Sobre fondo negro el foco negro no se ve: se invierte. */
+.sobre-negro :focus-visible,
+.sobre-negro:focus-visible {
+  outline-color: var(--color-blanco);
+}
+
+/* =====================================================================
+   Movimiento
+   La única animación protagonista de la app es el splash de inicio.
+   Todo lo demás responde a una acción del usuario.
+   ===================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Hoja inferior: entra desde abajo al abrirla. */
+@keyframes hoja-entra {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fundido-entra {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Esqueleto de carga: un latido lento, sin brillos ni gradientes. */
+@keyframes latido {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Toast: entra desde abajo y se queda. */
+@keyframes aviso-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =====================================================================
+   Áreas seguras del teléfono
+   ===================================================================== */
+
+.pad-arriba-seguro {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.pad-abajo-seguro {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* =====================================================================
+   Utilidades propias
+   ===================================================================== */
+
+/* Tablas que se desplazan dentro de su propio contenedor, nunca
+   arrastrando la página entera. */
+.scroll-lateral {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Oculta la barra de desplazamiento en carruseles de chips. */
+.sin-barra {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.sin-barra::-webkit-scrollbar {
+  display: none;
+}
+
+/* Quita las flechitas de los campos numéricos: en el celular estorban. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* El select nativo con la flecha dibujada por nosotros. */
+select.campo-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234A4A4A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* Impresión de etiquetas QR: sin header, sin barra inferior. */
+@media print {
+  .no-imprimir {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
 }

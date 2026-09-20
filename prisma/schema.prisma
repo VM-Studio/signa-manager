@@ -1,0 +1,1181 @@
+// =====================================================================
+// SIGNA · Sistema a medida
+// Cubre lo que el sistema base (Lebane o Sorby) NO registra:
+// herramientas, personal, vehiculos, alertas y tablero del dueno.
+// La plata y los materiales de cada obra viven en el sistema base y
+// se leen desde ahi (tablas *Externo).
+// =====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------ ENUMS -------------------------------
+
+enum Rol {
+  DUENO
+  ADMINISTRACION
+  ARQUITECTA
+  JEFE_OBRA
+  CAPATAZ
+  PANOLERO
+  LOGISTICA
+  CHOFER
+  RRHH
+}
+
+enum TipoObra {
+  PROPIA
+  TERCEROS
+}
+
+enum EstadoObra {
+  PLANIFICADA
+  EN_CURSO
+  PAUSADA
+  FINALIZADA
+}
+
+enum OrigenDato {
+  MANUAL
+  SISTEMA_BASE
+}
+
+enum Moneda {
+  ARS
+  USD
+}
+
+enum TipoMovimientoExterno {
+  INGRESO
+  EGRESO
+}
+
+enum CategoriaCostoExterno {
+  MATERIALES
+  SUBCONTRATOS
+  EQUIPOS_Y_ALQUILERES
+  HONORARIOS
+  IMPUESTOS_Y_TASAS
+  ESTRUCTURA
+  COBRO_CLIENTE
+  VENTA_UNIDAD
+  ALQUILER_TEMPORARIO
+  OTROS
+}
+
+enum EstadoPedidoCompra {
+  BORRADOR
+  PENDIENTE_APROBACION
+  APROBADO
+  COMPRADO
+  ENTREGADO_PARCIAL
+  ENTREGADO
+  CANCELADO
+}
+
+enum EstadoSync {
+  EN_CURSO
+  OK
+  ERROR
+}
+
+enum TipoControlHerramienta {
+  UNITARIO
+  CANTIDAD
+}
+
+enum EstadoHerramienta {
+  DISPONIBLE
+  EN_OBRA
+  EN_REPARACION
+  EXTRAVIADA
+  BAJA
+}
+
+enum Condicion {
+  BUENA
+  REGULAR
+  MALA
+}
+
+enum TipoMovimientoHerramienta {
+  ALTA
+  SALIDA_A_OBRA
+  DEVOLUCION
+  TRANSFERENCIA
+  ENVIO_A_REPARACION
+  RETORNO_DE_REPARACION
+  EXTRAVIO
+  BAJA
+}
+
+enum TipoMantenimiento {
+  PREVENTIVO
+  CORRECTIVO
+}
+
+enum EstadoSolicitudHerramienta {
+  PENDIENTE
+  RESUELTA_CON_STOCK
+  DERIVADA_A_COMPRA
+  RECHAZADA
+  CANCELADA
+}
+
+enum CategoriaLaboral {
+  OFICIAL_ESPECIALIZADO
+  OFICIAL
+  MEDIO_OFICIAL
+  AYUDANTE
+  SERENO
+  CAPATAZ
+  CHOFER
+  ADMINISTRATIVO
+  OTRO
+}
+
+enum TipoDocumentoEmpleado {
+  ALTA_ART
+  APTO_MEDICO
+  LIBRETA_FONDO_CESE
+  CURSO_SEGURIDAD
+  LICENCIA_CONDUCIR
+  SEGURO_VIDA
+  OTRO
+}
+
+enum RubroSubcontratista {
+  ELECTRICIDAD
+  PLOMERIA
+  GAS
+  PINTURA
+  YESERIA
+  HERRERIA
+  CARPINTERIA
+  DURLOCK
+  IMPERMEABILIZACION
+  EXCAVACION
+  HORMIGON
+  CLIMATIZACION
+  ASCENSORES
+  OTRO
+}
+
+enum TipoDocumentoSubcontratista {
+  ART_NOMINA
+  SEGURO_ACCIDENTES_PERSONALES
+  SEGURO_RESPONSABILIDAD_CIVIL
+  CONSTANCIA_ARCA
+  FORMULARIO_931
+  OTRO
+}
+
+enum EstadoParte {
+  BORRADOR
+  ENVIADO
+  APROBADO
+}
+
+enum Clima {
+  DESPEJADO
+  NUBLADO
+  LLUVIA
+  LLUVIA_CON_PARO
+  VIENTO_FUERTE
+}
+
+enum Asistencia {
+  PRESENTE
+  MEDIA_JORNADA
+  AUSENTE_CON_AVISO
+  AUSENTE_SIN_AVISO
+  LICENCIA
+  VACACIONES
+  FERIADO
+  SUSPENSION_POR_LLUVIA
+}
+
+enum TipoNovedad {
+  ADELANTO
+  VIATICO
+  PREMIO
+  DESCUENTO
+  REINTEGRO_GASTO
+}
+
+enum EstadoQuincena {
+  ABIERTA
+  CERRADA
+  ENVIADA_AL_ESTUDIO
+  PAGADA
+}
+
+enum MedioPago {
+  EFECTIVO
+  TRANSFERENCIA
+  CHEQUE
+  ECHEQ
+  OTRO
+}
+
+enum TipoVehiculo {
+  CAMION
+  CAMIONETA
+  UTILITARIO
+  AUTO
+  MAQUINA_VIAL
+  ACOPLADO
+}
+
+enum Combustible {
+  NAFTA
+  DIESEL
+  GNC
+  ELECTRICO
+}
+
+enum EstadoVehiculo {
+  DISPONIBLE
+  EN_VIAJE
+  EN_TALLER
+  FUERA_DE_SERVICIO
+  VENDIDO
+}
+
+enum TipoDocumentoVehiculo {
+  SEGURO
+  VTV
+  PATENTE
+  RUTA
+  CEDULA
+  MATAFUEGO
+  HABILITACION_CARGA
+  OTRO
+}
+
+enum TipoViaje {
+  ENTREGA_MATERIALES
+  RETIRO_EN_PROVEEDOR
+  TRASLADO_HERRAMIENTAS
+  TRASLADO_PERSONAL
+  RETIRO_ESCOMBROS
+  TRAMITE
+  OTRO
+}
+
+enum Prioridad {
+  BAJA
+  NORMAL
+  ALTA
+  URGENTE
+}
+
+enum EstadoSolicitudViaje {
+  PENDIENTE
+  ASIGNADA
+  RECHAZADA
+  CANCELADA
+}
+
+enum EstadoViaje {
+  PROGRAMADO
+  EN_CURSO
+  FINALIZADO
+  CANCELADO
+}
+
+enum TipoIncidenteVehiculo {
+  MULTA
+  SINIESTRO
+  ROTURA
+  ROBO
+}
+
+enum Severidad {
+  INFO
+  AVISO
+  CRITICA
+}
+
+enum EstadoAlerta {
+  ABIERTA
+  VISTA
+  RESUELTA
+  DESCARTADA
+}
+
+enum CanalNotificacion {
+  APP
+  EMAIL
+  WHATSAPP
+}
+
+enum EstadoEnvio {
+  PENDIENTE
+  ENVIADO
+  ERROR
+}
+
+// ------------------------------ NUCLEO ------------------------------
+
+model Usuario {
+  id           String   @id @default(cuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  rol          Rol
+  telefono     String?
+  activo       Boolean  @default(true)
+  ultimoAcceso DateTime?
+  creadoEn     DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  empleado   Empleado? @relation("UsuarioEmpleado", fields: [empleadoId], references: [id])
+  empleadoId String?   @unique
+
+  obrasACargo             Obra[]                  @relation("JefeDeObra")
+  depositosACargo         Deposito[]
+  movimientosHerramienta  MovimientoHerramienta[] @relation("MovimientoRegistradoPor")
+  solicitudesHerramienta  SolicitudHerramienta[]  @relation("SolicitudHerramientaSolicitante")
+  solicitudesResueltas    SolicitudHerramienta[]  @relation("SolicitudHerramientaResuelta")
+  partesCargados          ParteDiario[]           @relation("ParteCargadoPor")
+  partesAprobados         ParteDiario[]           @relation("ParteAprobadoPor")
+  quincenasCerradas       Quincena[]
+  solicitudesViaje        SolicitudViaje[]
+  alertasResueltas        Alerta[]
+  notificaciones          NotificacionEnvio[]
+  auditoria               RegistroAuditoria[]
+}
+
+model UnidadNegocio {
+  id     String  @id @default(cuid())
+  codigo String  @unique // CONSTRUCCION, DESARROLLOS, SERVICIOS, OBRA_CIVIL, ALQUILERES
+  nombre String
+  orden  Int     @default(0)
+  activa Boolean @default(true)
+  obras  Obra[]
+}
+
+model Obra {
+  id              String     @id @default(cuid())
+  codigo          String     @unique // clave compartida con el sistema base
+  nombre          String
+  tipo            TipoObra
+  estado          EstadoObra @default(EN_CURSO)
+  cliente         String?
+  direccion       String?
+  localidad       String?
+  provincia       String?
+  esInterior      Boolean    @default(false) // obras fuera de AMBA: viaticos y logistica
+  latitud         Float?
+  longitud        Float?
+  fechaInicio     DateTime?
+  fechaFinPrevista DateTime?
+  fechaFinReal    DateTime?
+
+  presupuestoManoObra Decimal? @db.Decimal(14, 2)
+  presupuestoTotal    Decimal? @db.Decimal(14, 2)
+  moneda              Moneda   @default(ARS)
+
+  origen     OrigenDato @default(MANUAL)
+  idExterno  String?    // id de la obra en Lebane / Sorby
+  ultimaSync DateTime?
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  unidadNegocio   UnidadNegocio @relation(fields: [unidadNegocioId], references: [id])
+  unidadNegocioId String
+  jefeObra        Usuario?      @relation("JefeDeObra", fields: [jefeObraId], references: [id])
+  jefeObraId      String?
+
+  herramientas            Herramienta[]
+  existenciasHerramienta  ExistenciaHerramienta[]
+  movimientosOrigen       MovimientoHerramienta[] @relation("MovimientoOrigenObra")
+  movimientosDestino      MovimientoHerramienta[] @relation("MovimientoDestinoObra")
+  solicitudesHerramienta  SolicitudHerramienta[]
+  asignaciones            AsignacionObra[]
+  partes                  ParteDiario[]
+  novedades               NovedadPersonal[]
+  resumenesQuincena       QuincenaLinea[]
+  solicitudesViaje        SolicitudViaje[]
+  viajes                  Viaje[]
+  cargasCombustible       CargaCombustible[]
+  movimientosExternos     MovimientoExterno[]
+  pedidosCompra           PedidoCompraExterno[]
+  alertas                 Alerta[]
+
+  @@index([estado])
+  @@index([unidadNegocioId])
+  @@index([idExterno])
+}
+
+model Deposito {
+  id        String  @id @default(cuid())
+  nombre    String  @unique
+  direccion String?
+  activo    Boolean @default(true)
+
+  responsable   Usuario? @relation(fields: [responsableId], references: [id])
+  responsableId String?
+
+  herramientas           Herramienta[]
+  existenciasHerramienta ExistenciaHerramienta[]
+  movimientosOrigen      MovimientoHerramienta[] @relation("MovimientoOrigenDeposito")
+  movimientosDestino     MovimientoHerramienta[] @relation("MovimientoDestinoDeposito")
+}
+
+// ----------------- INTEGRACION CON EL SISTEMA BASE ------------------
+// Espejo de solo lectura. Nunca se edita a mano: lo escribe la sync.
+
+model MovimientoExterno {
+  id          String                @id @default(cuid())
+  idExterno   String
+  fuente      String                // "lebane" | "sorby" | "mock"
+  tipo        TipoMovimientoExterno
+  categoria   CategoriaCostoExterno
+  fecha       DateTime
+  descripcion String?
+  proveedor   String?
+  monto       Decimal               @db.Decimal(14, 2)
+  moneda      Moneda                @default(ARS)
+  tipoCambio  Decimal?              @db.Decimal(10, 2)
+  importadoEn DateTime              @default(now())
+
+  obra   Obra?   @relation(fields: [obraId], references: [id])
+  obraId String? // null = gasto de estructura, sin obra
+
+  @@unique([fuente, idExterno])
+  @@index([obraId, fecha])
+  @@index([categoria])
+}
+
+model PedidoCompraExterno {
+  id                   String             @id @default(cuid())
+  idExterno            String
+  fuente               String
+  numero               String?
+  descripcion          String
+  solicitante          String?
+  proveedor            String?
+  estado               EstadoPedidoCompra
+  monto                Decimal?           @db.Decimal(14, 2)
+  moneda               Moneda             @default(ARS)
+  fechaSolicitud       DateTime
+  fechaNecesariaEnObra DateTime?
+  fechaAprobacion      DateTime?
+  fechaEntregaEstimada DateTime?
+  fechaEntregaReal     DateTime?
+  importadoEn          DateTime           @default(now())
+
+  obra   Obra   @relation(fields: [obraId], references: [id])
+  obraId String
+
+  @@unique([fuente, idExterno])
+  @@index([estado])
+  @@index([obraId])
+}
+
+model RegistroSync {
+  id         String     @id @default(cuid())
+  fuente     String
+  inicio     DateTime   @default(now())
+  fin        DateTime?
+  estado     EstadoSync @default(EN_CURSO)
+  obras      Int        @default(0)
+  movimientos Int       @default(0)
+  pedidos    Int        @default(0)
+  error      String?
+}
+
+// ---------------------------- HERRAMIENTAS --------------------------
+
+model CategoriaHerramienta {
+  id           String        @id @default(cuid())
+  nombre       String        @unique // Electricas, Medicion, Andamios, Encofrado, Manuales...
+  herramientas Herramienta[]
+  solicitudes  SolicitudHerramienta[]
+}
+
+model Herramienta {
+  id          String                 @id @default(cuid())
+  codigo      String                 @unique // lo que va impreso en el QR: SIG-H-0001
+  nombre      String
+  marca       String?
+  modelo      String?
+  nroSerie    String?
+  tipoControl TipoControlHerramienta @default(UNITARIO)
+  estado      EstadoHerramienta      @default(DISPONIBLE)
+  condicion   Condicion              @default(BUENA)
+  fotoUrl     String?
+  notas       String?
+
+  fechaCompra   DateTime?
+  valorCompra   Decimal?  @db.Decimal(14, 2)
+  moneda        Moneda    @default(ARS)
+  proveedor     String?
+  costoDiarioImputable Decimal? @db.Decimal(12, 2) // para cargarle costo a la obra por dia de uso
+
+  mantenimientoCadaDias Int?
+  proximoMantenimiento  DateTime?
+
+  // Ubicacion actual (solo para control UNITARIO). Una sola de las dos.
+  deposito   Deposito? @relation(fields: [depositoId], references: [id])
+  depositoId String?
+  obra       Obra?     @relation(fields: [obraId], references: [id])
+  obraId     String?
+
+  responsableActual   Empleado? @relation(fields: [responsableActualId], references: [id])
+  responsableActualId String?
+  fechaDevolucionPrevista DateTime?
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  categoria   CategoriaHerramienta @relation(fields: [categoriaId], references: [id])
+  categoriaId String
+
+  existencias    ExistenciaHerramienta[]
+  movimientos    MovimientoHerramienta[]
+  mantenimientos MantenimientoHerramienta[]
+
+  @@index([estado])
+  @@index([obraId])
+  @@index([depositoId])
+  @@index([categoriaId])
+}
+
+// Para herramientas menores controladas por cantidad (palas, baldes, puntales)
+model ExistenciaHerramienta {
+  id       String @id @default(cuid())
+  cantidad Int
+
+  herramienta   Herramienta @relation(fields: [herramientaId], references: [id], onDelete: Cascade)
+  herramientaId String
+  deposito      Deposito?   @relation(fields: [depositoId], references: [id])
+  depositoId    String?
+  obra          Obra?       @relation(fields: [obraId], references: [id])
+  obraId        String?
+
+  @@unique([herramientaId, depositoId, obraId])
+}
+
+model MovimientoHerramienta {
+  id        String                    @id @default(cuid())
+  tipo      TipoMovimientoHerramienta
+  fecha     DateTime                  @default(now())
+  cantidad  Int                       @default(1)
+  condicion Condicion?
+  fechaDevolucionPrevista DateTime?
+  observaciones String?
+  fotoUrl       String?
+
+  herramienta   Herramienta @relation(fields: [herramientaId], references: [id])
+  herramientaId String
+
+  origenDeposito    Deposito? @relation("MovimientoOrigenDeposito", fields: [origenDepositoId], references: [id])
+  origenDepositoId  String?
+  origenObra        Obra?     @relation("MovimientoOrigenObra", fields: [origenObraId], references: [id])
+  origenObraId      String?
+  destinoDeposito   Deposito? @relation("MovimientoDestinoDeposito", fields: [destinoDepositoId], references: [id])
+  destinoDepositoId String?
+  destinoObra       Obra?     @relation("MovimientoDestinoObra", fields: [destinoObraId], references: [id])
+  destinoObraId     String?
+
+  registradoPor   Usuario   @relation("MovimientoRegistradoPor", fields: [registradoPorId], references: [id])
+  registradoPorId String
+  recibidoPor     Empleado? @relation(fields: [recibidoPorId], references: [id])
+  recibidoPorId   String?
+
+  solicitud   SolicitudHerramienta? @relation(fields: [solicitudId], references: [id])
+  solicitudId String?
+
+  @@index([herramientaId, fecha])
+  @@index([destinoObraId])
+}
+
+model MantenimientoHerramienta {
+  id           String            @id @default(cuid())
+  tipo         TipoMantenimiento
+  fecha        DateTime
+  descripcion  String
+  proveedor    String?
+  costo        Decimal?          @db.Decimal(14, 2)
+  proximaFecha DateTime?
+
+  herramienta   Herramienta @relation(fields: [herramientaId], references: [id], onDelete: Cascade)
+  herramientaId String
+
+  @@index([herramientaId])
+}
+
+// El freno a las compras duplicadas: antes de comprar, se pide aca.
+model SolicitudHerramienta {
+  id             String                     @id @default(cuid())
+  descripcion    String
+  cantidad       Int                        @default(1)
+  fechaNecesaria DateTime
+  prioridad      Prioridad                  @default(NORMAL)
+  estado         EstadoSolicitudHerramienta @default(PENDIENTE)
+  resolucionNota String?
+  creadaEn       DateTime                   @default(now())
+  resueltaEn     DateTime?
+
+  obra          Obra                  @relation(fields: [obraId], references: [id])
+  obraId        String
+  categoria     CategoriaHerramienta? @relation(fields: [categoriaId], references: [id])
+  categoriaId   String?
+  solicitante   Usuario               @relation("SolicitudHerramientaSolicitante", fields: [solicitanteId], references: [id])
+  solicitanteId String
+  resueltaPor   Usuario?              @relation("SolicitudHerramientaResuelta", fields: [resueltaPorId], references: [id])
+  resueltaPorId String?
+
+  movimientos MovimientoHerramienta[]
+
+  @@index([estado])
+  @@index([obraId])
+}
+
+// ------------------------------ PERSONAL ----------------------------
+
+model Empleado {
+  id           String           @id @default(cuid())
+  legajo       String           @unique
+  nombre       String
+  apellido     String
+  dni          String           @unique
+  cuil         String?
+  telefono     String?
+  direccion    String?
+  localidad    String?
+  fechaIngreso DateTime
+  fechaEgreso  DateTime?
+  categoria    CategoriaLaboral
+  especialidad String?          // albanil, armador, encofrador, hormigonero...
+  valorHora    Decimal          @db.Decimal(12, 2)
+  activo       Boolean          @default(true)
+  fotoUrl      String?
+  contactoEmergenciaNombre   String?
+  contactoEmergenciaTelefono String?
+  talleRopa    String?
+  talleCalzado String?
+  notas        String?
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  usuario Usuario? @relation("UsuarioEmpleado")
+
+  documentos          DocumentoEmpleado[]
+  entregasEpp         EntregaEpp[]
+  historialValorHora  HistorialValorHora[]
+  cuadrillasComoCapataz Cuadrilla[]       @relation("CapatazCuadrilla")
+  cuadrillas          CuadrillaMiembro[]
+  asignaciones        AsignacionObra[]
+  lineasParte         ParteDiarioLinea[]
+  novedades           NovedadPersonal[]
+  lineasQuincena      QuincenaLinea[]
+  pagos               PagoPersonal[]
+  herramientasACargo  Herramienta[]
+  herramientasRecibidas MovimientoHerramienta[]
+  vehiculosHabituales Vehiculo[]
+  viajes              Viaje[]
+  cargasCombustible   CargaCombustible[]
+  incidentesVehiculo  IncidenteVehiculo[]
+
+  @@index([activo])
+  @@index([apellido, nombre])
+}
+
+model HistorialValorHora {
+  id        String   @id @default(cuid())
+  valorHora Decimal  @db.Decimal(12, 2)
+  desde     DateTime
+  motivo    String?  // paritaria UOCRA, recategorizacion...
+
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  empleadoId String
+
+  @@index([empleadoId, desde])
+}
+
+model DocumentoEmpleado {
+  id          String                @id @default(cuid())
+  tipo        TipoDocumentoEmpleado
+  descripcion String?
+  emision     DateTime?
+  vencimiento DateTime?
+  archivoUrl  String?
+
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  empleadoId String
+
+  @@index([vencimiento])
+}
+
+// Entrega de ropa y elementos de proteccion (constancia Res. SRT 299/11)
+model EntregaEpp {
+  id        String   @id @default(cuid())
+  elemento  String   // casco, botines, arnes, guantes, anteojos...
+  cantidad  Int      @default(1)
+  fecha     DateTime
+  marca     String?
+  firmado   Boolean  @default(false)
+  archivoUrl String?
+
+  empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  empleadoId String
+
+  @@index([empleadoId])
+}
+
+model Subcontratista {
+  id          String              @id @default(cuid())
+  razonSocial String
+  cuit        String              @unique
+  rubro       RubroSubcontratista
+  contacto    String?
+  telefono    String?
+  email       String?
+  activo      Boolean             @default(true)
+  notas       String?
+  creadoEn    DateTime            @default(now())
+
+  documentos DocumentoSubcontratista[]
+  asignaciones AsignacionObra[]
+  presencias ParteSubcontratista[]
+  pagos      PagoPersonal[]
+}
+
+model DocumentoSubcontratista {
+  id          String                      @id @default(cuid())
+  tipo        TipoDocumentoSubcontratista
+  descripcion String?
+  vencimiento DateTime?
+  archivoUrl  String?
+
+  subcontratista   Subcontratista @relation(fields: [subcontratistaId], references: [id], onDelete: Cascade)
+  subcontratistaId String
+
+  @@index([vencimiento])
+}
+
+model Cuadrilla {
+  id     String  @id @default(cuid())
+  nombre String  @unique
+  activa Boolean @default(true)
+
+  capataz   Empleado? @relation("CapatazCuadrilla", fields: [capatazId], references: [id])
+  capatazId String?
+
+  miembros     CuadrillaMiembro[]
+  asignaciones AsignacionObra[]
+}
+
+model CuadrillaMiembro {
+  id String @id @default(cuid())
+
+  cuadrilla   Cuadrilla @relation(fields: [cuadrillaId], references: [id], onDelete: Cascade)
+  cuadrillaId String
+  empleado    Empleado  @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  empleadoId  String
+
+  @@unique([cuadrillaId, empleadoId])
+}
+
+// Planificacion: quien esta asignado a que obra y en que periodo
+model AsignacionObra {
+  id     String    @id @default(cuid())
+  desde  DateTime
+  hasta  DateTime?
+  tarea  String?
+
+  obra             Obra            @relation(fields: [obraId], references: [id])
+  obraId           String
+  empleado         Empleado?       @relation(fields: [empleadoId], references: [id])
+  empleadoId       String?
+  subcontratista   Subcontratista? @relation(fields: [subcontratistaId], references: [id])
+  subcontratistaId String?
+  cuadrilla        Cuadrilla?      @relation(fields: [cuadrillaId], references: [id])
+  cuadrillaId      String?
+
+  @@index([obraId, desde])
+  @@index([empleadoId, desde])
+}
+
+// Lo que realmente paso: un parte por obra por dia
+model ParteDiario {
+  id            String      @id @default(cuid())
+  fecha         DateTime    @db.Date
+  clima         Clima       @default(DESPEJADO)
+  estado        EstadoParte @default(BORRADOR)
+  observaciones String?
+  tareasDelDia  String?
+  creadoEn      DateTime    @default(now())
+  enviadoEn     DateTime?
+  aprobadoEn    DateTime?
+
+  obra          Obra     @relation(fields: [obraId], references: [id])
+  obraId        String
+  cargadoPor    Usuario  @relation("ParteCargadoPor", fields: [cargadoPorId], references: [id])
+  cargadoPorId  String
+  aprobadoPor   Usuario? @relation("ParteAprobadoPor", fields: [aprobadoPorId], references: [id])
+  aprobadoPorId String?
+
+  lineas          ParteDiarioLinea[]
+  subcontratistas ParteSubcontratista[]
+
+  @@unique([obraId, fecha])
+  @@index([fecha])
+}
+
+model ParteDiarioLinea {
+  id             String     @id @default(cuid())
+  asistencia     Asistencia @default(PRESENTE)
+  horasNormales  Decimal    @default(0) @db.Decimal(5, 2)
+  horasExtra50   Decimal    @default(0) @db.Decimal(5, 2)
+  horasExtra100  Decimal    @default(0) @db.Decimal(5, 2)
+  tarea          String?
+  // Se congelan al aprobar el parte, para que un cambio de valor hora no reescriba la historia
+  valorHoraAplicado Decimal? @db.Decimal(12, 2)
+  costoCalculado    Decimal? @db.Decimal(14, 2)
+
+  parte      ParteDiario @relation(fields: [parteId], references: [id], onDelete: Cascade)
+  parteId    String
+  empleado   Empleado    @relation(fields: [empleadoId], references: [id])
+  empleadoId String
+
+  @@unique([parteId, empleadoId])
+  @@index([empleadoId])
+}
+
+model ParteSubcontratista {
+  id               String  @id @default(cuid())
+  cantidadPersonas Int
+  tarea            String?
+
+  parte            ParteDiario    @relation(fields: [parteId], references: [id], onDelete: Cascade)
+  parteId          String
+  subcontratista   Subcontratista @relation(fields: [subcontratistaId], references: [id])
+  subcontratistaId String
+
+  @@unique([parteId, subcontratistaId])
+}
+
+model NovedadPersonal {
+  id          String      @id @default(cuid())
+  tipo        TipoNovedad
+  fecha       DateTime
+  monto       Decimal     @db.Decimal(14, 2)
+  descripcion String?
+  comprobanteUrl String?
+
+  empleado   Empleado  @relation(fields: [empleadoId], references: [id])
+  empleadoId String
+  obra       Obra?     @relation(fields: [obraId], references: [id])
+  obraId     String?
+  quincena   Quincena? @relation(fields: [quincenaId], references: [id])
+  quincenaId String?
+
+  @@index([empleadoId, fecha])
+}
+
+model Quincena {
+  id     String         @id @default(cuid())
+  anio   Int
+  mes    Int
+  numero Int            // 1 = del 1 al 15, 2 = del 16 a fin de mes
+  desde  DateTime       @db.Date
+  hasta  DateTime       @db.Date
+  estado EstadoQuincena @default(ABIERTA)
+  cerradaEn DateTime?
+
+  cerradaPor   Usuario? @relation(fields: [cerradaPorId], references: [id])
+  cerradaPorId String?
+
+  lineas    QuincenaLinea[]
+  novedades NovedadPersonal[]
+  pagos     PagoPersonal[]
+
+  @@unique([anio, mes, numero])
+}
+
+// Foto congelada al cerrar la quincena: horas y costo por empleado y por obra.
+// Es lo que se le exporta al estudio que liquida los sueldos.
+model QuincenaLinea {
+  id            String  @id @default(cuid())
+  diasTrabajados Int
+  horasNormales Decimal @db.Decimal(7, 2)
+  horasExtra50  Decimal @db.Decimal(7, 2)
+  horasExtra100 Decimal @db.Decimal(7, 2)
+  ausencias     Int     @default(0)
+  costo         Decimal @db.Decimal(14, 2)
+
+  quincena   Quincena @relation(fields: [quincenaId], references: [id], onDelete: Cascade)
+  quincenaId String
+  empleado   Empleado @relation(fields: [empleadoId], references: [id])
+  empleadoId String
+  obra       Obra     @relation(fields: [obraId], references: [id])
+  obraId     String
+
+  @@unique([quincenaId, empleadoId, obraId])
+}
+
+model PagoPersonal {
+  id       String    @id @default(cuid())
+  fecha    DateTime
+  monto    Decimal   @db.Decimal(14, 2)
+  medio    MedioPago
+  concepto String?
+  comprobanteUrl String?
+
+  empleado         Empleado?       @relation(fields: [empleadoId], references: [id])
+  empleadoId       String?
+  subcontratista   Subcontratista? @relation(fields: [subcontratistaId], references: [id])
+  subcontratistaId String?
+  quincena         Quincena?       @relation(fields: [quincenaId], references: [id])
+  quincenaId       String?
+
+  @@index([fecha])
+}
+
+// ------------------------------ VEHICULOS ---------------------------
+
+model Vehiculo {
+  id              String         @id @default(cuid())
+  patente         String         @unique
+  interno         String?        // numero interno de la empresa
+  tipo            TipoVehiculo
+  marca           String
+  modelo          String
+  anio            Int?
+  combustible     Combustible    @default(DIESEL)
+  capacidadCargaKg Int?
+  volumenM3       Decimal?       @db.Decimal(6, 2)
+  cantidadPasajeros Int?
+  kmActual        Int            @default(0)
+  horasActual     Int?           // horometro, para maquinas
+  estado          EstadoVehiculo @default(DISPONIBLE)
+  tieneGps        Boolean        @default(false)
+  costoKmEstimado Decimal?       @db.Decimal(10, 2)
+  fotoUrl         String?
+  notas           String?
+  creadoEn        DateTime       @default(now())
+  actualizadoEn   DateTime       @updatedAt
+
+  choferHabitual   Empleado? @relation(fields: [choferHabitualId], references: [id])
+  choferHabitualId String?
+
+  documentos     DocumentoVehiculo[]
+  viajes         Viaje[]
+  cargas         CargaCombustible[]
+  mantenimientos MantenimientoVehiculo[]
+  incidentes     IncidenteVehiculo[]
+
+  @@index([estado])
+}
+
+model DocumentoVehiculo {
+  id          String                @id @default(cuid())
+  tipo        TipoDocumentoVehiculo
+  descripcion String?
+  vencimiento DateTime?
+  costo       Decimal?              @db.Decimal(14, 2)
+  archivoUrl  String?
+
+  vehiculo   Vehiculo @relation(fields: [vehiculoId], references: [id], onDelete: Cascade)
+  vehiculoId String
+
+  @@index([vencimiento])
+}
+
+model SolicitudViaje {
+  id                String               @id @default(cuid())
+  tipo              TipoViaje
+  origen            String
+  destino           String
+  descripcionCarga  String?
+  pesoEstimadoKg    Int?
+  cantidadPersonas  Int?
+  fechaHoraNecesaria DateTime
+  prioridad         Prioridad            @default(NORMAL)
+  estado            EstadoSolicitudViaje @default(PENDIENTE)
+  motivoRechazo     String?
+  creadaEn          DateTime             @default(now())
+
+  obra          Obra    @relation(fields: [obraId], references: [id])
+  obraId        String
+  solicitante   Usuario @relation(fields: [solicitanteId], references: [id])
+  solicitanteId String
+
+  viaje Viaje?
+
+  @@index([estado, fechaHoraNecesaria])
+}
+
+model Viaje {
+  id               String      @id @default(cuid())
+  tipo             TipoViaje
+  estado           EstadoViaje @default(PROGRAMADO)
+  origen           String
+  destino          String
+  descripcionCarga String?
+  pesoCargaKg      Int?
+  salidaPrevista   DateTime
+  salidaReal       DateTime?
+  llegadaReal      DateTime?
+  kmSalida         Int?
+  kmLlegada        Int?
+  peajes           Decimal?    @db.Decimal(12, 2)
+  costoCalculado   Decimal?    @db.Decimal(14, 2) // km recorridos x costoKm + peajes, se imputa a la obra
+  observaciones    String?
+  creadoEn         DateTime    @default(now())
+
+  vehiculo    Vehiculo        @relation(fields: [vehiculoId], references: [id])
+  vehiculoId  String
+  chofer      Empleado        @relation(fields: [choferId], references: [id])
+  choferId    String
+  obra        Obra?           @relation(fields: [obraId], references: [id])
+  obraId      String?
+  solicitud   SolicitudViaje? @relation(fields: [solicitudId], references: [id])
+  solicitudId String?         @unique
+
+  @@index([vehiculoId, salidaPrevista])
+  @@index([choferId, salidaPrevista])
+  @@index([obraId])
+  @@index([estado])
+}
+
+model CargaCombustible {
+  id       String   @id @default(cuid())
+  fecha    DateTime
+  litros   Decimal  @db.Decimal(8, 2)
+  monto    Decimal  @db.Decimal(14, 2)
+  km       Int?
+  estacion String?
+  comprobanteUrl String?
+
+  vehiculo   Vehiculo  @relation(fields: [vehiculoId], references: [id])
+  vehiculoId String
+  chofer     Empleado? @relation(fields: [choferId], references: [id])
+  choferId   String?
+  obra       Obra?     @relation(fields: [obraId], references: [id])
+  obraId     String?
+
+  @@index([vehiculoId, fecha])
+}
+
+model MantenimientoVehiculo {
+  id           String            @id @default(cuid())
+  tipo         TipoMantenimiento
+  fecha        DateTime
+  km           Int?
+  descripcion  String
+  taller       String?
+  costo        Decimal?          @db.Decimal(14, 2)
+  proximoKm    Int?
+  proximaFecha DateTime?
+
+  vehiculo   Vehiculo @relation(fields: [vehiculoId], references: [id], onDelete: Cascade)
+  vehiculoId String
+
+  @@index([vehiculoId])
+}
+
+model IncidenteVehiculo {
+  id          String                @id @default(cuid())
+  tipo        TipoIncidenteVehiculo
+  fecha       DateTime
+  descripcion String
+  monto       Decimal?              @db.Decimal(14, 2)
+  resuelto    Boolean               @default(false)
+  archivoUrl  String?
+
+  vehiculo   Vehiculo  @relation(fields: [vehiculoId], references: [id], onDelete: Cascade)
+  vehiculoId String
+  chofer     Empleado? @relation(fields: [choferId], references: [id])
+  choferId   String?
+
+  @@index([vehiculoId])
+}
+
+// ------------------------------- ALERTAS ----------------------------
+
+model ReglaAlerta {
+  id          String    @id @default(cuid())
+  codigo      String    @unique // HERRAMIENTA_NO_DEVUELTA, PARTE_FALTANTE, VTV_POR_VENCER...
+  nombre      String
+  descripcion String
+  modulo      String    // herramientas | personal | vehiculos | compras | obras | sistema
+  severidad   Severidad @default(AVISO)
+  umbral      Int?      // dias, km o porcentaje segun la regla
+  activa      Boolean   @default(true)
+  rolesDestino Rol[]
+  canales     CanalNotificacion[]
+
+  alertas Alerta[]
+}
+
+model Alerta {
+  id          String       @id @default(cuid())
+  claveUnica  String       @unique // regla + entidad, evita duplicar la misma alerta
+  severidad   Severidad
+  titulo      String
+  detalle     String
+  entidadTipo String       // Herramienta | Empleado | Vehiculo | PedidoCompraExterno | Obra ...
+  entidadId   String
+  enlace      String?      // ruta interna para ir directo al problema
+  estado      EstadoAlerta @default(ABIERTA)
+  creadaEn    DateTime     @default(now())
+  resueltaEn  DateTime?
+
+  regla         ReglaAlerta @relation(fields: [reglaId], references: [id])
+  reglaId       String
+  obra          Obra?       @relation(fields: [obraId], references: [id])
+  obraId        String?
+  resueltaPor   Usuario?    @relation(fields: [resueltaPorId], references: [id])
+  resueltaPorId String?
+
+  envios NotificacionEnvio[]
+
+  @@index([estado, severidad])
+  @@index([obraId])
+}
+
+model NotificacionEnvio {
+  id        String            @id @default(cuid())
+  canal     CanalNotificacion
+  estado    EstadoEnvio       @default(PENDIENTE)
+  enviadoEn DateTime?
+  error     String?
+
+  alerta    Alerta  @relation(fields: [alertaId], references: [id], onDelete: Cascade)
+  alertaId  String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId String
+
+  @@index([usuarioId, estado])
+}
+
+// ------------------------------ AUDITORIA ---------------------------
+
+model RegistroAuditoria {
+  id        String   @id @default(cuid())
+  accion    String   // CREAR | EDITAR | ELIMINAR | APROBAR | CERRAR ...
+  entidad   String
+  entidadId String
+  antes     Json?
+  despues   Json?
+  fecha     DateTime @default(now())
+
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
+  usuarioId String?
+
+  @@index([entidad, entidadId])
+  @@index([fecha])
+}
