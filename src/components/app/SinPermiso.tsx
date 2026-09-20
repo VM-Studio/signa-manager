@@ -19,7 +19,7 @@ export function SinPermiso({
     <>
       <EncabezadoPantalla titulo={titulo} sinVolver />
       <div className="flex flex-col items-center justify-center gap-3 px-8 py-14 text-center">
-        <Lock aria-hidden className="size-8 text-acero" strokeWidth={1.5} />
+        <Lock aria-hidden className="size-8 text-metadato" strokeWidth={1.5} />
         <div>
           <p className="text-base font-medium text-negro">No podés entrar acá</p>
           <p className="mt-1 text-chico text-grafito">{mensaje}</p>

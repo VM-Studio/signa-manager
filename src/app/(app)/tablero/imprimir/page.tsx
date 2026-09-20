@@ -216,7 +216,7 @@ export default async function PaginaImprimir({
         </div>
       </section>
 
-      <footer className="mt-6 border-t border-niebla pt-3 text-micro text-acero">
+      <footer className="mt-6 border-t border-niebla pt-3 text-micro text-metadato">
         Todos los montos están expresados en pesos. Los movimientos en dólares
         se convierten con el tipo de cambio de cada operación.
         {datos.sincronizacion.ultima && (

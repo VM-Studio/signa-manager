@@ -299,7 +299,7 @@ export function Escaner({
                     }
                     flecha={false}
                     derecha={
-                      <Trash2 aria-hidden className="size-4 text-acero" />
+                      <Trash2 aria-hidden className="size-4 text-metadato" />
                     }
                   />
                 ))}

@@ -241,7 +241,7 @@ export function AsignarViaje({
                 izquierda={
                   <AlertTriangle
                     aria-hidden
-                    className="size-4 shrink-0 text-acero"
+                    className="size-4 shrink-0 text-metadato"
                   />
                 }
                 flecha={false}
@@ -295,7 +295,7 @@ export function AsignarViaje({
                 titulo={`${c.apellido}, ${c.nombre}`}
                 detalle={c.bloqueos.map((b) => b.mensaje).join(' ')}
                 izquierda={
-                  <AlertTriangle aria-hidden className="size-4 shrink-0 text-acero" />
+                  <AlertTriangle aria-hidden className="size-4 shrink-0 text-metadato" />
                 }
                 flecha={false}
               />

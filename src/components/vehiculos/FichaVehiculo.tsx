@@ -276,7 +276,7 @@ export function FichaVehiculo({
               </Lista>
 
               <div className="px-4 pt-3">
-                <p className="text-menor text-acero">
+                <p className="text-menor text-metadato">
                   Costo de documentación del año:{' '}
                   {moneda(
                     vehiculo.documentos.reduce(
@@ -395,7 +395,7 @@ export function FichaVehiculo({
                 {moneda(indicadores.costoDelMes.mantenimiento)}
               </Dato>
             </ListaDatos>
-            <p className="pb-4 text-menor text-acero">
+            <p className="pb-4 text-menor text-metadato">
               Se toma lo que ocurra primero: los kilómetros o la fecha.
             </p>
           </div>

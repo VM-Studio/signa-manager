@@ -63,12 +63,12 @@ export function InicioDueno({
           >
             {monedaCorta(resumen.mes.resultado)}
           </p>
-          <p className="text-micro text-acero">{porcentaje(resumen.mes.margen)}</p>
+          <p className="text-micro text-metadato">{porcentaje(resumen.mes.margen)}</p>
         </div>
       </div>
 
       {resumen.mes.estructura > 0 && (
-        <p className="px-4 pt-2 text-menor text-acero">
+        <p className="px-4 pt-2 text-menor text-metadato">
           Después de {monedaCorta(resumen.mes.estructura)} de estructura, el
           resultado neto es{' '}
           <span
@@ -165,7 +165,7 @@ export function InicioDueno({
             <span className="min-w-0 flex-1 text-base text-negro">
               Quincenas y pagos
             </span>
-            <ArrowRight aria-hidden className="size-4 shrink-0 text-acero" />
+            <ArrowRight aria-hidden className="size-4 shrink-0 text-metadato" />
           </Link>
         </div>
       )}

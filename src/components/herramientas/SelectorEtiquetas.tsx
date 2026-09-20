@@ -151,7 +151,7 @@ export function SelectorEtiquetas({
             >
               Imprimir {plural(elegidas.length, 'etiqueta')}
             </Boton>
-            <p className="mt-2 text-center text-menor text-acero">
+            <p className="mt-2 text-center text-menor text-metadato">
               Entran 24 por hoja A4. Imprimí sin márgenes y sin escalar.
             </p>
           </div>

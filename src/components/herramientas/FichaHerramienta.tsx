@@ -136,7 +136,7 @@ export function FichaHerramienta({
               </p>
             )}
             {herramienta.fechaDevolucionPrevista && (
-              <p className="mt-1 text-menor text-acero">
+              <p className="mt-1 text-menor text-metadato">
                 {textoVencimiento(herramienta.fechaDevolucionPrevista)}
               </p>
             )}
@@ -247,7 +247,7 @@ export function FichaHerramienta({
         <p className="cifras text-base font-medium text-negro">
           {herramienta.codigo}
         </p>
-        <p className="text-menor text-acero">
+        <p className="text-menor text-metadato">
           Escaneándolo se abre esta ficha.
         </p>
       </div>

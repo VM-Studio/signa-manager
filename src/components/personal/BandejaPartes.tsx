@@ -151,7 +151,7 @@ export function BandejaPartes({
                   <div className="flex flex-col items-end gap-1">
                     <Insignia tono="aviso">Sin aprobar</Insignia>
                     {p.enviadoEn && (
-                      <span className="text-micro text-acero">
+                      <span className="text-micro text-metadato">
                         {haceCuanto(p.enviadoEn)}
                       </span>
                     )}
@@ -221,7 +221,7 @@ export function BandejaPartes({
             {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
               <span
                 key={i}
-                className="pb-1 text-center text-micro text-acero"
+                className="pb-1 text-center text-micro text-metadato"
                 aria-hidden
               >
                 {d}
@@ -254,7 +254,7 @@ export function BandejaPartes({
                     ? 'border-[color-mix(in_srgb,var(--color-correcto)_30%,transparent)] bg-[var(--color-correcto-suave)] text-correcto'
                     : d.estado === EstadoParte.ENVIADO
                       ? 'border-niebla bg-blanco text-grafito'
-                      : 'border-dashed border-acero bg-blanco text-acero',
+                      : 'border-dashed border-acero bg-blanco text-metadato',
               )
 
               return (

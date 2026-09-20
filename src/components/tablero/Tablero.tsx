@@ -166,7 +166,7 @@ export function Tablero({
           </form>
         )}
 
-        <p className="mt-2 text-menor text-acero">
+        <p className="mt-2 text-menor text-metadato">
           {primeraMayuscula(datos.periodo.etiqueta)} · todos los montos en pesos
         </p>
       </div>
@@ -370,7 +370,7 @@ export function Tablero({
         </Lista>
       )}
 
-      <p className="px-4 pt-2 text-menor text-acero">
+      <p className="px-4 pt-2 text-menor text-metadato">
         Los gastos de estructura no se reparten entre las obras: son de la
         empresa.
       </p>
@@ -454,7 +454,7 @@ export function Tablero({
               ))}
             </ListaDatos>
             {explicando.ultimaSync && (
-              <p className="mt-3 border-t border-niebla pt-3 text-menor text-acero">
+              <p className="mt-3 border-t border-niebla pt-3 text-menor text-metadato">
                 Última sincronización con el sistema base:{' '}
                 {haceCuanto(explicando.ultimaSync)}.
               </p>
@@ -501,7 +501,7 @@ function Cifra({
             type="button"
             onClick={alExplicar}
             aria-label={`De dónde sale ${etiqueta}`}
-            className="-mt-1 -mr-1 flex size-7 shrink-0 items-center justify-center rounded text-acero active:bg-hueso"
+            className="-mt-1 -mr-1 flex size-7 shrink-0 items-center justify-center rounded text-metadato active:bg-hueso"
           >
             <Info aria-hidden className="size-3.5" />
           </button>
@@ -524,7 +524,7 @@ function Cifra({
                 ? invertirColor
                   ? 'text-correcto'
                   : 'text-critico'
-                : 'text-acero',
+                : 'text-metadato',
           )}
         >
           {variacion > 0 ? (
@@ -565,7 +565,7 @@ function Simple({
       <p className={cn('cifras mt-0.5 text-grande font-medium', colores[tono])}>
         {valor}
       </p>
-      {detalle && <p className="text-micro text-acero">{detalle}</p>}
+      {detalle && <p className="text-micro text-metadato">{detalle}</p>}
     </div>
   )
 }
@@ -590,7 +590,7 @@ function FilaTabla({ obra }: { obra: ObraTablero }) {
       <td className="px-3 py-2.5">
         <Link href={`/tablero/obra/${obra.obraId}`} className="hover:underline">
           <span className="block text-base text-negro">{obra.nombre}</span>
-          <span className="block text-micro text-acero">
+          <span className="block text-micro text-metadato">
             {obra.codigo} · {obra.unidadNegocio}
           </span>
         </Link>

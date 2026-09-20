@@ -85,13 +85,13 @@ export default async function PaginaAgenda({
             <div className="min-w-[640px]">
               {/* Regla de horas */}
               <div className="flex border-b border-niebla">
-                <div className="w-[104px] shrink-0 px-3 py-1.5 text-micro text-acero">
+                <div className="w-[104px] shrink-0 px-3 py-1.5 text-micro text-metadato">
                   Vehículo
                 </div>
                 {horas.map((h) => (
                   <div
                     key={h}
-                    className="cifras flex-1 border-l border-niebla px-1 py-1.5 text-center text-micro text-acero"
+                    className="cifras flex-1 border-l border-niebla px-1 py-1.5 text-center text-micro text-metadato"
                   >
                     {h}
                   </div>
@@ -104,7 +104,7 @@ export default async function PaginaAgenda({
                     <p className="cifras truncate text-menor font-medium text-negro">
                       {patente(v.patente)}
                     </p>
-                    <p className="truncate text-micro text-acero">
+                    <p className="truncate text-micro text-metadato">
                       {v.capacidadCargaKg ? peso(v.capacidadCargaKg) : TIPO_VEHICULO[v.tipo]}
                     </p>
                   </div>
@@ -165,7 +165,7 @@ export default async function PaginaAgenda({
             </div>
           </div>
 
-          <p className="px-4 pt-3 text-menor text-acero">
+          <p className="px-4 pt-3 text-menor text-metadato">
             Deslizá la tabla de costado para ver todo el día. Tocá un bloque
             para abrir el viaje.
           </p>

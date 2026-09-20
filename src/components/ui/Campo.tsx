@@ -54,7 +54,7 @@ function Envoltorio({
           <span>{error}</span>
         </p>
       ) : ayuda ? (
-        <p id={`${id}-ayuda`} className="text-menor text-acero">
+        <p id={`${id}-ayuda`} className="text-menor text-metadato">
           {ayuda}
         </p>
       ) : null}
@@ -65,9 +65,9 @@ function Envoltorio({
 /** Clases compartidas por todos los controles, para que se vean iguales. */
 const baseControl = [
   'w-full min-h-[48px] rounded-[var(--radius-control)] bg-blanco px-3',
-  'text-cuerpo text-negro placeholder:text-acero',
+  'text-cuerpo text-negro placeholder:text-metadato',
   'border transition-colors',
-  'disabled:bg-hueso disabled:text-acero disabled:cursor-not-allowed',
+  'disabled:bg-hueso disabled:text-metadato disabled:cursor-not-allowed',
 ].join(' ')
 
 const borde = (hayError?: boolean) =>
@@ -162,7 +162,7 @@ export const CampoNumero = forwardRef<HTMLInputElement, CampoNumeroProps>(
           {prefijo && (
             <span
               aria-hidden
-              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-cuerpo text-acero"
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-cuerpo text-metadato"
             >
               {prefijo}
             </span>
@@ -189,7 +189,7 @@ export const CampoNumero = forwardRef<HTMLInputElement, CampoNumeroProps>(
           {sufijo && (
             <span
               aria-hidden
-              className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-menor text-acero"
+              className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-menor text-metadato"
             >
               {sufijo}
             </span>
@@ -427,7 +427,7 @@ export const CampoCheck = forwardRef<HTMLInputElement, CampoCheckProps>(
           <span className="flex flex-col">
             <span className="text-base text-negro">{etiqueta}</span>
             {descripcion && (
-              <span className="text-menor text-acero">{descripcion}</span>
+              <span className="text-menor text-metadato">{descripcion}</span>
             )}
           </span>
         </label>
@@ -463,7 +463,7 @@ export const Interruptor = forwardRef<HTMLInputElement, InterruptorProps>(
         <span className="flex flex-col">
           <span className="text-base text-negro">{etiqueta}</span>
           {descripcion && (
-            <span className="text-menor text-acero">{descripcion}</span>
+            <span className="text-menor text-metadato">{descripcion}</span>
           )}
         </span>
 

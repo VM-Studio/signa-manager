@@ -8,6 +8,8 @@ import { Header } from '@/components/app/Header'
 import { BarraInferior } from '@/components/app/BarraInferior'
 import { Splash } from '@/components/app/Splash'
 import { FranjaDemo } from '@/components/app/FranjaDemo'
+import { AvisoInstalar } from '@/components/app/AvisoInstalar'
+import { ColaDePartes } from '@/components/personal/ColaDePartes'
 import { ProveedorAvisos } from '@/components/ui'
 
 /* =====================================================================
@@ -57,6 +59,8 @@ export default async function LayoutApp({
             puedeVerAlertas={puedeVerAlertas}
           />
           {esDemo && <FranjaDemo />}
+          {/* Partes cargados sin señal: se envían solos al volver. */}
+          <ColaDePartes />
 
           {/* El padding de arriba deja lugar al header fijo y al área
               segura del teléfono; el de abajo, a la barra inferior.
@@ -74,6 +78,7 @@ export default async function LayoutApp({
           </div>
 
           <BarraInferior items={items} />
+          <AvisoInstalar />
         </div>
       </ProveedorAvisos>
     </Splash>

@@ -40,7 +40,7 @@ export default function ErrorApp({
             : 'No pudimos cargar esta pantalla. Probá de nuevo; si sigue igual, avisá a administración.'}
         </p>
         {error.digest && (
-          <p className="mt-2 text-micro text-acero">Código: {error.digest}</p>
+          <p className="mt-2 text-micro text-metadato">Código: {error.digest}</p>
         )}
       </div>
       <div className="flex w-full max-w-[280px] flex-col gap-2">

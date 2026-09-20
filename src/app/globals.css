@@ -13,6 +13,10 @@
   --color-carbon: #1a1a1a;
   --color-grafito: #4a4a4a;
   --color-acero: #8c8c8c;
+  /* El mismo gris, un punto más oscuro, para el texto chico sobre fondo
+     claro: #8C8C8C sobre blanco da 3,36 de contraste y la app se usa al
+     sol. Este llega a 4,7 y sigue leyéndose como gris secundario. */
+  --color-metadato: #6b6b6b;
   --color-niebla: #e6e6e6;
   --color-hueso: #f5f5f5;
   --color-blanco: #ffffff;
@@ -22,6 +26,9 @@
   --color-correcto-suave: #e8f3ed;
   --color-aviso: #b7791f;
   --color-aviso-suave: #fbf2e3;
+  /* El mismo ámbar, más oscuro, para el TEXTO sobre el fondo suave:
+     #B7791F sobre #FBF2E3 da 3,28 y no llega a AA. Este llega a 5,1. */
+  --color-aviso-texto: #8a5a14;
   --color-critico: #b42318;
   --color-critico-suave: #fbeae8;
 

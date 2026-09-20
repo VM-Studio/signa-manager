@@ -18,7 +18,7 @@ const plata = (n: number) => `$ ${Math.round(n).toLocaleString('es-AR')}`
 const iguales = (a: number, b: number, tolerancia = 1) => Math.abs(a - b) < tolerancia
 
 async function main() {
-  const { armarPeriodo, calcularTablero, costosPorObra } = await import(
+  const { armarPeriodo, calcularTablero } = await import(
     '../../src/lib/calculos/tablero'
   )
 

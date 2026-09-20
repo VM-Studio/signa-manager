@@ -103,11 +103,11 @@ export function AltaMasiva({
               htmlFor="archivo-csv"
               className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius-panel)] border-2 border-dashed border-niebla bg-blanco px-4 py-6 text-center active:bg-hueso"
             >
-              <Upload aria-hidden className="size-7 text-acero" strokeWidth={1.5} />
+              <Upload aria-hidden className="size-7 text-metadato" strokeWidth={1.5} />
               <span className="text-base font-medium text-negro">
                 {leyendo ? 'Leyendo el archivo…' : 'Elegí el archivo CSV'}
               </span>
-              <span className="text-menor text-acero">
+              <span className="text-menor text-metadato">
                 Se revisa antes de cargar nada.
               </span>
             </label>

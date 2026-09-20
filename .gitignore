@@ -46,3 +46,7 @@ next-env.d.ts
 
 # Sistema operativo
 .DS_Store
+
+# Service worker: lo genera el build
+/public/sw.js
+/public/sw.js.map

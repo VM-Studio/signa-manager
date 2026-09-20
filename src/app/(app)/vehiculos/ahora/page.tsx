@@ -123,7 +123,7 @@ export default async function PaginaAhora() {
                   .join(' · ')
               }
               izquierda={
-                <MapPin aria-hidden className="size-5 text-acero" strokeWidth={1.75} />
+                <MapPin aria-hidden className="size-5 text-metadato" strokeWidth={1.75} />
               }
               debajoDerecha={<InsigniaEstadoVehiculo estado={v.estado} />}
               href={`/vehiculos/${v.id}`}
@@ -160,7 +160,7 @@ export default async function PaginaAhora() {
         </>
       )}
 
-      <p className="px-4 pt-5 text-menor text-acero">
+      <p className="px-4 pt-5 text-menor text-metadato">
         Esta pantalla se arma con los viajes cargados en la app. Si más
         adelante se contrata un servicio de rastreo, acá se va a poder ver
         también la posición real de cada vehículo.

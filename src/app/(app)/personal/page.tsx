@@ -136,12 +136,12 @@ export default async function PaginaPersonal() {
               <span className="block truncate text-base text-negro">
                 {s.texto}
               </span>
-              <span className="block truncate text-menor text-acero">
+              <span className="block truncate text-menor text-metadato">
                 {s.descripcion}
               </span>
             </span>
             {s.contador !== undefined && s.contador > 0 && (
-              <span className="cifras shrink-0 rounded-full bg-aviso px-2 py-0.5 text-micro font-medium text-blanco">
+              <span className="cifras shrink-0 rounded-full bg-[var(--color-aviso-texto)] px-2 py-0.5 text-micro font-medium text-blanco">
                 {s.contador}
               </span>
             )}
@@ -149,7 +149,7 @@ export default async function PaginaPersonal() {
         ))}
       </div>
 
-      <p className="px-4 pt-4 text-menor text-acero">
+      <p className="px-4 pt-4 text-menor text-metadato">
         {numero(subcontratistas)} subcontratistas activos. Este módulo no
         liquida sueldos: registra quién trabajó dónde y cuánto, y le entrega
         el resumen al estudio contable.

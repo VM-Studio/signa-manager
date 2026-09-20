@@ -93,7 +93,7 @@ export function InicioObras({
                   {ESTADO[o.estado].texto}
                 </Insignia>
                 {o.esInterior && (
-                  <span className="flex items-center gap-1 text-micro text-acero">
+                  <span className="flex items-center gap-1 text-micro text-metadato">
                     <MapPin aria-hidden className="size-3" />
                     Interior
                   </span>

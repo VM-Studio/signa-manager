@@ -12,13 +12,13 @@ const variantes: Record<VarianteBoton, string> = {
     'bg-negro text-blanco border border-negro active:bg-carbon disabled:bg-acero disabled:border-acero',
   // Borde fino sobre claro. Acciones secundarias.
   secundario:
-    'bg-blanco text-negro border border-niebla active:bg-hueso disabled:text-acero disabled:bg-hueso',
+    'bg-blanco text-negro border border-niebla active:bg-hueso disabled:text-metadato disabled:bg-hueso',
   // Solo para lo que destruye o no tiene vuelta atrás.
   peligro:
     'bg-critico text-blanco border border-critico active:brightness-90 disabled:bg-acero disabled:border-acero',
   // Sin fondo ni borde. Para "Cancelar" y acciones de poco peso.
   fantasma:
-    'bg-transparent text-grafito border border-transparent active:bg-niebla disabled:text-acero',
+    'bg-transparent text-grafito border border-transparent active:bg-niebla disabled:text-metadato',
 }
 
 const tamanos: Record<TamanoBoton, string> = {

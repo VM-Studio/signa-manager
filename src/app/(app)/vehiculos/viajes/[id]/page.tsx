@@ -119,7 +119,7 @@ export default async function PaginaViaje({
               )}
             </ListaDatos>
             {viaje.costoCalculado && recorridos !== null && (
-              <p className="pb-4 text-menor text-acero">
+              <p className="pb-4 text-menor text-metadato">
                 {kilometros(recorridos)} ×{' '}
                 {moneda(
                   Number(viaje.vehiculo.costoKmEstimado ?? 0),

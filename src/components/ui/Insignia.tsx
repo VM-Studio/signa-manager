@@ -13,7 +13,7 @@ export type TonoInsignia = 'neutro' | 'correcto' | 'aviso' | 'critico'
 const tonos: Record<TonoInsignia, string> = {
   neutro: 'bg-niebla text-grafito',
   correcto: 'bg-[var(--color-correcto-suave)] text-correcto',
-  aviso: 'bg-[var(--color-aviso-suave)] text-aviso',
+  aviso: 'bg-[var(--color-aviso-suave)] text-[var(--color-aviso-texto)]',
   critico: 'bg-[var(--color-critico-suave)] text-critico',
 }
 

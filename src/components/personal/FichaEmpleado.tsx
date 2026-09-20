@@ -48,8 +48,8 @@ const COLOR_ASISTENCIA: Record<Asistencia, string> = {
   AUSENTE_SIN_AVISO: 'bg-[var(--color-critico-suave)] text-critico border-[color-mix(in_srgb,var(--color-critico)_30%,transparent)]',
   LICENCIA: 'bg-hueso text-grafito border-niebla',
   VACACIONES: 'bg-hueso text-grafito border-niebla',
-  FERIADO: 'bg-hueso text-acero border-niebla',
-  SUSPENSION_POR_LLUVIA: 'bg-hueso text-acero border-dashed border-acero',
+  FERIADO: 'bg-hueso text-metadato border-niebla',
+  SUSPENSION_POR_LLUVIA: 'bg-hueso text-metadato border-dashed border-acero',
 }
 
 export function FichaEmpleado({

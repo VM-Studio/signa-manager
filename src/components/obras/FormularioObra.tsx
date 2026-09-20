@@ -304,5 +304,5 @@ function BotonGuardar({ esEdicion }: { esEdicion: boolean }) {
 
 /** Candado para las etiquetas de los campos bloqueados. */
 export function IconoBloqueado() {
-  return <Lock aria-hidden className="size-3 text-acero" />
+  return <Lock aria-hidden className="size-3 text-metadato" />
 }

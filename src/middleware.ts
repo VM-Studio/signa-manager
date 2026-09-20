@@ -8,7 +8,12 @@ import { NOMBRE_COOKIE, verificarToken } from '@/lib/auth/token'
    solo verifica la firma del token.
    ===================================================================== */
 
-const RUTAS_PUBLICAS = ['/login']
+const RUTAS_PUBLICAS = [
+  '/login',
+  // La página sin conexión la sirve el service worker cuando no hay
+  // señal: si el middleware la protegiera, nunca se podría ver.
+  '/sin-conexion',
+]
 
 /** Rutas de API que se autentican con su propio token de servicio. */
 const RUTAS_CON_TOKEN_PROPIO = ['/api/sync', '/api/alertas/evaluar']
@@ -35,6 +40,20 @@ export async function middleware (peticion: NextRequest) {
   if (esPublica) return NextResponse.next()
 
   if (!sesion) {
+    /*
+     * Una ruta de API tiene que contestar 401, no redirigir: quien la
+     * llama es código, y un HTML de login en vez de JSON lo rompe de una
+     * forma difícil de entender.
+     */
+    if (pathname.startsWith('/api/')) {
+      const respuesta = NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 },
+      )
+      if (token) respuesta.cookies.delete(NOMBRE_COOKIE)
+      return respuesta
+    }
+
     const destino = new URL('/login', peticion.url)
     // Se guarda a dónde quería ir para volver ahí después de entrar.
     if (pathname !== '/') destino.searchParams.set('volverA', pathname)

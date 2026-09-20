@@ -129,7 +129,7 @@ export function ListaObras({
                 <div className="flex flex-col items-end gap-1">
                   <InsigniaEstadoObra estado={o.estado} />
                   {o.esInterior && (
-                    <span className="flex items-center gap-1 text-micro text-acero">
+                    <span className="flex items-center gap-1 text-micro text-metadato">
                       <MapPin aria-hidden className="size-3" />
                       Interior
                     </span>

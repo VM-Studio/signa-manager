@@ -6,7 +6,7 @@
 export function FranjaDemo() {
   return (
     <p
-      className="fixed inset-x-0 z-20 bg-aviso py-1 text-center text-micro font-medium text-blanco"
+      className="fixed inset-x-0 z-20 bg-[var(--color-aviso-texto)] py-1 text-center text-micro font-medium text-blanco"
       style={{ top: 'calc(var(--alto-header) + env(safe-area-inset-top, 0px))' }}
     >
       Versión de demostración con datos de ejemplo

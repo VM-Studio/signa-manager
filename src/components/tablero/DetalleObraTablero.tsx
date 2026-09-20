@@ -153,7 +153,7 @@ export function DetalleObraTablero({
                 ['Materiales', 'Mano de obra', 'Vehículos', 'Herramientas'].includes(
                   p.nombre,
                 ) ? (
-                  <Info aria-hidden className="size-3 text-acero" />
+                  <Info aria-hidden className="size-3 text-metadato" />
                 ) : undefined
               }
             />
@@ -212,14 +212,14 @@ export function DetalleObraTablero({
                   className="flex flex-1 flex-col items-center gap-1"
                   title={`Semana del ${fechaCorta(new Date(`${s.semana}T00:00:00`))}: ${formatoHoras(s.horas)}`}
                 >
-                  <span className="cifras text-micro text-acero">
+                  <span className="cifras text-micro text-metadato">
                     {Math.round(s.horas)}
                   </span>
                   <div
                     className="w-full rounded-t-[2px] bg-negro"
                     style={{ height: `${Math.max(alto, 3)}px`, minHeight: 3 }}
                   />
-                  <span className="text-micro text-acero">
+                  <span className="text-micro text-metadato">
                     {new Date(`${s.semana}T00:00:00`).getDate()}/
                     {new Date(`${s.semana}T00:00:00`).getMonth() + 1}
                   </span>
@@ -227,7 +227,7 @@ export function DetalleObraTablero({
               )
             })}
           </div>
-          <p className="px-4 pt-2 text-menor text-acero">
+          <p className="px-4 pt-2 text-menor text-metadato">
             {formatoHoras(totalHoras)} en el período.
           </p>
         </>

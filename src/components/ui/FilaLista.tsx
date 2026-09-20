@@ -60,7 +60,7 @@ export function FilaLista({
         {subtitulo && (
           <p className="truncate text-chico text-grafito">{subtitulo}</p>
         )}
-        {detalle && <p className="truncate text-menor text-acero">{detalle}</p>}
+        {detalle && <p className="truncate text-menor text-metadato">{detalle}</p>}
       </div>
 
       {(derecha || debajoDerecha) && (
@@ -75,7 +75,7 @@ export function FilaLista({
       )}
 
       {mostrarFlecha && (
-        <ChevronRight aria-hidden className="size-4 shrink-0 text-acero" />
+        <ChevronRight aria-hidden className="size-4 shrink-0 text-metadato" />
       )}
     </>
   )

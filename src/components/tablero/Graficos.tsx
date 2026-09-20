@@ -249,7 +249,7 @@ export function BarraComposicion({
               style={{ background: TONOS[i % TONOS.length] }}
             />
             {p.nombre}
-            <span className="cifras text-acero">
+            <span className="cifras text-metadato">
               {Math.round((p.monto / total) * 100)}%
             </span>
           </span>

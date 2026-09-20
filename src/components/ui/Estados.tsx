@@ -32,7 +32,7 @@ export function EstadoVacio({
         className,
       )}
     >
-      <span aria-hidden className="text-acero">
+      <span aria-hidden className="text-metadato">
         {icono ?? <Inbox className="size-8" strokeWidth={1.5} />}
       </span>
       <div>

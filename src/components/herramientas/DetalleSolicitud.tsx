@@ -163,7 +163,7 @@ export function DetalleSolicitud({
               {solicitud.resolucionNota ?? 'Sin nota.'}
             </p>
             {solicitud.resueltaPor && (
-              <p className="mt-2 text-menor text-acero">
+              <p className="mt-2 text-menor text-metadato">
                 {solicitud.resueltaPor} · {fechaCorta(solicitud.resueltaEn)}
               </p>
             )}

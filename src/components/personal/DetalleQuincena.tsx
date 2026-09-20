@@ -325,7 +325,7 @@ export function DetalleQuincena({
                 </div>
               ))}
               {pendientes.length > 30 && (
-                <p className="py-2 text-menor text-acero">
+                <p className="py-2 text-menor text-metadato">
                   y {pendientes.length - 30} más…
                 </p>
               )}

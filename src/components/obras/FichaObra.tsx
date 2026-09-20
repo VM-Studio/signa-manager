@@ -277,7 +277,7 @@ function PanelResumen({
               <Dato etiqueta="Última sincronización">
                 {obra.ultimaSync ? (
                   <span className="flex items-center gap-1.5">
-                    <RefreshCw aria-hidden className="size-3 text-acero" />
+                    <RefreshCw aria-hidden className="size-3 text-metadato" />
                     {haceCuanto(obra.ultimaSync)}
                   </span>
                 ) : (
@@ -285,7 +285,7 @@ function PanelResumen({
                 )}
               </Dato>
             </ListaDatos>
-            <p className="pb-4 text-menor text-acero">
+            <p className="pb-4 text-menor text-metadato">
               El código, el nombre, el cliente, el estado y el presupuesto
               total se editan en el sistema base.
             </p>

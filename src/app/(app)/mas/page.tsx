@@ -52,7 +52,7 @@ export default async function PaginaMas() {
                     {item.texto}
                   </span>
                   {item.descripcion && (
-                    <span className="block truncate text-menor text-acero">
+                    <span className="block truncate text-menor text-metadato">
                       {item.descripcion}
                     </span>
                   )}
@@ -67,7 +67,7 @@ export default async function PaginaMas() {
         <BotonCerrarSesion />
       </div>
 
-      <p className="px-4 pt-6 text-center text-micro text-acero">
+      <p className="px-4 pt-6 text-center text-micro text-metadato">
         Signa · sistema interno
       </p>
     </div>

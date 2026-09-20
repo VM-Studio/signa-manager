@@ -83,7 +83,7 @@ export function useAvisos(): ContextoAvisos {
 const estilos: Record<TonoAviso, string> = {
   neutro: 'bg-carbon text-blanco',
   correcto: 'bg-correcto text-blanco',
-  aviso: 'bg-aviso text-blanco',
+  aviso: 'bg-[var(--color-aviso-texto)] text-blanco',
   critico: 'bg-critico text-blanco',
 }
 
@@ -151,7 +151,7 @@ export function AvisoFijo({
   const fondos: Record<TonoAviso, string> = {
     neutro: 'bg-hueso text-grafito border-niebla',
     correcto: 'bg-[var(--color-correcto-suave)] text-correcto border-[color-mix(in_srgb,var(--color-correcto)_25%,transparent)]',
-    aviso: 'bg-[var(--color-aviso-suave)] text-aviso border-[color-mix(in_srgb,var(--color-aviso)_25%,transparent)]',
+    aviso: 'bg-[var(--color-aviso-suave)] text-[var(--color-aviso-texto)] border-[color-mix(in_srgb,var(--color-aviso)_35%,transparent)]',
     critico: 'bg-[var(--color-critico-suave)] text-critico border-[color-mix(in_srgb,var(--color-critico)_25%,transparent)]',
   }
 

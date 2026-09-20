@@ -64,7 +64,7 @@ export default async function PaginaCuadrillas() {
               ))}
             </Lista>
 
-            <p className="px-4 pt-2 text-menor text-acero">
+            <p className="px-4 pt-2 text-menor text-metadato">
               {plural(c.miembros.length, 'persona')}
               {c.capataz ? ' más el capataz' : ''}.
             </p>

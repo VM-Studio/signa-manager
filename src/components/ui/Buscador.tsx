@@ -28,7 +28,7 @@ export const Buscador = forwardRef<HTMLInputElement, BuscadorProps>(
       <div className={cn('relative', className)}>
         <Search
           aria-hidden
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-acero"
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-metadato"
         />
         <input
           ref={ref}
@@ -39,7 +39,7 @@ export const Buscador = forwardRef<HTMLInputElement, BuscadorProps>(
           aria-label={typeof placeholder === 'string' ? placeholder : 'Buscar'}
           className={cn(
             'min-h-[var(--toque-minimo)] w-full rounded-[var(--radius-control)] border border-niebla bg-blanco',
-            'pr-10 pl-9 text-cuerpo text-negro placeholder:text-acero',
+            'pr-10 pl-9 text-cuerpo text-negro placeholder:text-metadato',
             'focus:border-negro',
             // Safari dibuja su propia cruz en los input[type=search]: la sacamos.
             '[&::-webkit-search-cancel-button]:appearance-none',
@@ -150,7 +150,7 @@ function Chip({
     >
       {texto}
       {cantidad !== undefined && (
-        <span className={cn('cifras', activo ? 'text-blanco/70' : 'text-acero')}>
+        <span className={cn('cifras', activo ? 'text-blanco/70' : 'text-metadato')}>
           {cantidad}
         </span>
       )}

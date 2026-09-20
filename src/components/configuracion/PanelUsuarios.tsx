@@ -99,7 +99,7 @@ export function PanelUsuarios({
             {u.activo ? NOMBRE_ROL[u.rol] : 'Desactivado'}
           </Insignia>
           {u.id === miUsuarioId && (
-            <span className="text-micro text-acero">Sos vos</span>
+            <span className="text-micro text-metadato">Sos vos</span>
           )}
         </div>
       }

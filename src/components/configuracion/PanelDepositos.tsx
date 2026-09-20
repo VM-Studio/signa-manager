@@ -73,7 +73,7 @@ export function PanelDepositos({
         !d.activo ? (
           <Insignia>Desactivado</Insignia>
         ) : d.valor > 0 ? (
-          <span className="text-micro text-acero">{monedaCorta(d.valor)}</span>
+          <span className="text-micro text-metadato">{monedaCorta(d.valor)}</span>
         ) : undefined
       }
       alTocar={puedeEditar ? () => setEditando(d) : undefined}

@@ -22,4 +22,9 @@ const eslintConfig = [
   },
 ];
 
+// Lo que genera el build no se lintea: no es código nuestro.
+eslintConfig.push({
+  ignores: ['public/sw.js', 'public/sw.js.map', '.next/**', 'node_modules/**'],
+});
+
 export default eslintConfig;

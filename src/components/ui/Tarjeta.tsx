@@ -81,7 +81,7 @@ export function NumeroResumen({
         {valor}
       </span>
       <span className="text-menor leading-tight text-grafito">{etiqueta}</span>
-      {detalle && <span className="text-micro text-acero">{detalle}</span>}
+      {detalle && <span className="text-micro text-metadato">{detalle}</span>}
     </>
   )
 

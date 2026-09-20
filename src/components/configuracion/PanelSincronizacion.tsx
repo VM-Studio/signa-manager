@@ -84,7 +84,7 @@ export function PanelSincronizacion({
               {nombreFuente}
             </p>
             {fuente === 'mock' && (
-              <p className="mt-1 text-menor text-acero">
+              <p className="mt-1 text-menor text-metadato">
                 Datos de ejemplo. Cuando se decida entre Lebane y Sorby, se
                 cambia la variable SISTEMA_BASE y no hace falta tocar nada más.
               </p>
@@ -150,7 +150,7 @@ export function PanelSincronizacion({
           >
             {pendiente ? 'Sincronizando…' : 'Sincronizar ahora'}
           </Boton>
-          <p className="mt-2 text-center text-menor text-acero">
+          <p className="mt-2 text-center text-menor text-metadato">
             También corre sola cada hora.
           </p>
         </div>
@@ -267,5 +267,5 @@ function IconoEstado({ estado }: { estado?: EstadoSync }) {
   if (estado === EstadoSync.ERROR) {
     return <XCircle aria-hidden className="size-6 shrink-0 text-critico" />
   }
-  return <AlertTriangle aria-hidden className="size-6 shrink-0 text-acero" />
+  return <AlertTriangle aria-hidden className="size-6 shrink-0 text-metadato" />
 }

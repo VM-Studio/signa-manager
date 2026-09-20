@@ -163,7 +163,7 @@ export function BandejaAlertas({
             <span className="mt-0.5 block text-chico text-grafito line-clamp-2">
               {a.detalle}
             </span>
-            <span className="mt-1 block text-micro text-acero">
+            <span className="mt-1 block text-micro text-metadato">
               {[
                 NOMBRE_MODULO[a.modulo] ?? a.modulo,
                 a.obra?.codigo,
@@ -185,7 +185,7 @@ export function BandejaAlertas({
                 : TEXTO_SEVERIDAD[a.severidad]}
             </Insignia>
             {a.estado === EstadoAlerta.VISTA && (
-              <span className="flex items-center gap-1 text-micro text-acero">
+              <span className="flex items-center gap-1 text-micro text-metadato">
                 <Eye aria-hidden className="size-3" />
                 Vista
               </span>
@@ -324,7 +324,7 @@ export function BandejaAlertas({
               {detalle.detalle}
             </p>
 
-            <div className="border-t border-niebla pt-3 text-menor text-acero">
+            <div className="border-t border-niebla pt-3 text-menor text-metadato">
               <p>Regla: {detalle.nombreRegla}</p>
               <p>Abierta el {fechaCorta(detalle.creadaEn)}</p>
               {detalle.resueltaEn && (

@@ -14,7 +14,7 @@ export function BotonImprimir() {
       >
         Imprimir o guardar como PDF
       </Boton>
-      <p className="text-center text-menor text-acero">
+      <p className="text-center text-menor text-metadato">
         En el diálogo de impresión elegí “Guardar como PDF”. Sale apaisado y
         con el logo.
       </p>

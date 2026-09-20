@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, CloudRain, Plus, Send, X } from 'lucide-react'
 import { Asistencia, Clima, EstadoParte } from '@prisma/client'
@@ -23,6 +23,12 @@ import {
   TituloSeccion,
   useAvisos,
 } from '@/components/ui'
+import {
+  borrarBorrador,
+  guardarBorrador,
+  hayConexion,
+  ponerEnCola,
+} from '@/lib/cola-partes'
 import { cn } from '@/lib/cn'
 import { fechaConDia, horas, plural, primeraMayuscula, textoEnum } from '@/lib/formato'
 
@@ -192,29 +198,65 @@ export function CargarParte({
     avisos.mostrar('Todos marcados como suspensión por lluvia')
   }
 
-  const guardar = (enviar: boolean) => {
-    empezar(async () => {
-      const lineas: LineaEnviada[] = personas.map((p) => ({
-        empleadoId: p.id,
-        asistencia: p.asistencia,
-        horasNormales: p.horasNormales,
-        horasExtra50: p.horasExtra50,
-        horasExtra100: p.horasExtra100,
-        tarea: p.tarea,
-      }))
+  /** Lo que se manda al servidor y lo que se guarda en el teléfono. */
+  const armarParte = () => ({
+    obraId: obra.id,
+    fecha,
+    clima,
+    tareasDelDia: tareas.trim() || null,
+    observaciones: observaciones.trim() || null,
+    lineas: personas.map((p) => ({
+      empleadoId: p.id,
+      asistencia: p.asistencia,
+      horasNormales: p.horasNormales,
+      horasExtra50: p.horasExtra50,
+      horasExtra100: p.horasExtra100,
+      tarea: p.tarea,
+    })) as LineaEnviada[],
+    subcontratistas: subs.map((s) => ({
+      subcontratistaId: s.subcontratistaId,
+      cantidadPersonas: s.cantidadPersonas,
+      tarea: s.tarea,
+    })),
+  })
 
+  /*
+   * El borrador se guarda solo en el teléfono mientras se completa.
+   * En obra la señal se corta y la app se cierra sola: si no se guardara,
+   * el capataz perdería veinte minutos de carga.
+   */
+  const guardadoInicial = useRef(true)
+  useEffect(() => {
+    if (soloLectura) return
+    if (guardadoInicial.current) {
+      guardadoInicial.current = false
+      return
+    }
+    const t = setTimeout(() => {
+      guardarBorrador({ ...armarParte(), guardadoEn: Date.now() })
+    }, 1200)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personas, clima, tareas, observaciones, subs, soloLectura])
+
+  const guardar = (enviar: boolean) => {
+    const parte = armarParte()
+
+    // Sin señal, el parte va a la cola y se manda solo cuando vuelva.
+    if (enviar && !hayConexion()) {
+      ponerEnCola({ ...parte, guardadoEn: Date.now() })
+      setConfirmandoEnvio(false)
+      avisos.mostrar(
+        'Sin señal: el parte quedó en cola y se envía solo cuando vuelva',
+        'aviso',
+      )
+      router.push('/personal/partes')
+      return
+    }
+
+    empezar(async () => {
       const resultado: ResultadoParte = await accionGuardarParte({
-        obraId: obra.id,
-        fecha,
-        clima,
-        tareasDelDia: tareas.trim() || null,
-        observaciones: observaciones.trim() || null,
-        lineas,
-        subcontratistas: subs.map((s) => ({
-          subcontratistaId: s.subcontratistaId,
-          cantidadPersonas: s.cantidadPersonas,
-          tarea: s.tarea,
-        })),
+        ...parte,
         enviar,
       })
 
@@ -227,8 +269,14 @@ export function CargarParte({
       }
 
       avisos.correcto(resultado.mensaje ?? 'Guardado')
-      if (enviar) router.push('/personal/partes')
-      else router.refresh()
+
+      if (enviar) {
+        // Ya está en el servidor: el borrador local no hace falta más.
+        borrarBorrador(obra.id, fecha)
+        router.push('/personal/partes')
+      } else {
+        router.refresh()
+      }
     })
   }
 
@@ -372,7 +420,7 @@ export function CargarParte({
                   <p className="truncate text-base font-medium text-negro">
                     {p.apellido}, {p.nombre}
                   </p>
-                  <p className="truncate text-micro text-acero">
+                  <p className="truncate text-micro text-metadato">
                     {p.legajo} · {textoEnum(p.categoria)}
                     {!p.asignado && ' · agregado'}
                   </p>
@@ -403,7 +451,7 @@ export function CargarParte({
                               ? 'border-negro bg-negro text-blanco'
                               : a === Asistencia.MEDIA_JORNADA
                                 ? 'border-grafito bg-grafito text-blanco'
-                                : 'border-aviso bg-aviso text-blanco'
+                                : 'border-[var(--color-aviso-texto)] bg-[var(--color-aviso-texto)] text-blanco'
                             : 'border-niebla bg-blanco text-grafito',
                           soloLectura && 'opacity-60',
                         )}
@@ -433,7 +481,7 @@ export function CargarParte({
 
               {/* Resumen de la fila cuando está plegada */}
               {!desplegada && total > 0 && (
-                <p className="cifras px-3 pb-2 text-micro text-acero">
+                <p className="cifras px-3 pb-2 text-micro text-metadato">
                   {horas(p.horasNormales)}
                   {p.horasExtra50 > 0 && ` + ${horas(p.horasExtra50)} al 50%`}
                   {p.horasExtra100 > 0 && ` + ${horas(p.horasExtra100)} al 100%`}
@@ -443,7 +491,7 @@ export function CargarParte({
               {!desplegada &&
                 total === 0 &&
                 p.asistencia !== Asistencia.PRESENTE && (
-                  <p className="px-3 pb-2 text-micro text-acero">
+                  <p className="px-3 pb-2 text-micro text-metadato">
                     {TEXTO_ASISTENCIA[p.asistencia]}
                   </p>
                 )}
@@ -567,7 +615,7 @@ export function CargarParte({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base text-negro">{s.razonSocial}</p>
                 {s.tarea && (
-                  <p className="truncate text-menor text-acero">{s.tarea}</p>
+                  <p className="truncate text-menor text-metadato">{s.tarea}</p>
                 )}
               </div>
               <span className="cifras text-base font-medium text-negro">
@@ -582,7 +630,7 @@ export function CargarParte({
                     )
                   }
                   aria-label={`Sacar ${s.razonSocial}`}
-                  className="flex size-9 shrink-0 items-center justify-center rounded text-acero active:bg-hueso"
+                  className="flex size-9 shrink-0 items-center justify-center rounded text-metadato active:bg-hueso"
                 >
                   <X aria-hidden className="size-4" />
                 </button>
@@ -635,7 +683,7 @@ export function CargarParte({
           >
             Guardar borrador
           </Boton>
-          <p className="text-center text-menor text-acero">
+          <p className="text-center text-menor text-metadato">
             El borrador se puede seguir editando. Una vez enviado, lo revisa el
             jefe de obra.
           </p>
@@ -675,12 +723,12 @@ export function CargarParte({
                 }}
                 className="flex min-h-[var(--toque-minimo)] w-full items-center gap-3 py-3 text-left active:bg-hueso"
               >
-                <Plus aria-hidden className="size-4 shrink-0 text-acero" />
+                <Plus aria-hidden className="size-4 shrink-0 text-metadato" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-base text-negro">
                     {e.apellido}, {e.nombre}
                   </span>
-                  <span className="block truncate text-menor text-acero">
+                  <span className="block truncate text-menor text-metadato">
                     {e.legajo} · {textoEnum(e.categoria)}
                   </span>
                 </span>
