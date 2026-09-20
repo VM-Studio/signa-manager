@@ -242,41 +242,99 @@ export function BandejaAlertas({
         </button>
       </div>
 
-      {visibles.length === 0 ? (
-        <EstadoVacio
-          titulo={verHistorial ? 'Sin historial' : 'No hay alertas abiertas'}
-          mensaje={
-            verHistorial
-              ? 'Acá van a aparecer las alertas que se resolvieron.'
-              : 'Está todo en orden. El sistema revisa cada hora y avisa si algo se traba.'
-          }
-          icono={<BellOff className="size-8" strokeWidth={1.5} />}
-        />
-      ) : (
-        <>
-          {criticas.length > 0 && (
+      {/* ------------- Lista a la izquierda, detalle a la derecha -------------
+
+          En el celular se toca una alerta y se abre la hoja. En
+          escritorio la lista queda a la izquierda y el detalle a la
+          derecha, fijo: se recorren diez alertas sin abrir y cerrar. */}
+      <div className="lg:flex lg:items-start lg:gap-6">
+        <div className="min-w-0 lg:flex-1">
+          {visibles.length === 0 ? (
+            <EstadoVacio
+              titulo={verHistorial ? 'Sin historial' : 'No hay alertas abiertas'}
+              mensaje={
+                verHistorial
+                  ? 'Acá van a aparecer las alertas que se resolvieron.'
+                  : 'Está todo en orden. El sistema revisa cada hora y avisa si algo se traba.'
+              }
+              icono={<BellOff className="size-8" strokeWidth={1.5} />}
+            />
+          ) : (
             <>
-              <TituloSeccion>
-                {plural(criticas.length, 'crítica', 'críticas')}
-              </TituloSeccion>
-              <Lista>{criticas.map(fila)}</Lista>
+              {criticas.length > 0 && (
+                <>
+                  <TituloSeccion>
+                    {plural(criticas.length, 'crítica', 'críticas')}
+                  </TituloSeccion>
+                  <Lista>{criticas.map(fila)}</Lista>
+                </>
+              )}
+
+              {resto.length > 0 && (
+                <>
+                  <TituloSeccion>
+                    {criticas.length > 0
+                      ? 'Avisos'
+                      : plural(resto.length, 'alerta')}
+                  </TituloSeccion>
+                  <Lista>{resto.map(fila)}</Lista>
+                </>
+              )}
             </>
           )}
+        </div>
 
-          {resto.length > 0 && (
+        <aside className="hidden lg:sticky lg:top-[calc(var(--alto-barra-superior)+16px)] lg:block lg:w-[420px] lg:shrink-0 lg:overflow-hidden lg:rounded-[var(--radius-panel)] lg:border lg:border-niebla lg:bg-blanco">
+          {detalle ? (
             <>
-              <TituloSeccion>
-                {criticas.length > 0
-                  ? 'Avisos'
-                  : plural(resto.length, 'alerta')}
-              </TituloSeccion>
-              <Lista>{resto.map(fila)}</Lista>
-            </>
-          )}
-        </>
-      )}
+              <header className="border-b border-niebla px-4 py-3">
+                <h2 className="text-titulo font-medium text-negro">
+                  {detalle.titulo}
+                </h2>
+                <p className="text-menor text-grafito">
+                  {NOMBRE_MODULO[detalle.modulo] ?? detalle.modulo}
+                  {detalle.obra ? ` · ${detalle.obra.codigo}` : ''}
+                </p>
+              </header>
 
-      {/* Detalle de una alerta */}
+              <div className="px-4 py-4">
+                <DetalleAlerta alerta={detalle} />
+              </div>
+
+              {detalle.estado !== EstadoAlerta.RESUELTA &&
+                detalle.estado !== EstadoAlerta.DESCARTADA && (
+                  <div className="flex gap-2 border-t border-niebla px-4 py-3">
+                    {puedeDescartar && (
+                      <Boton
+                        variante="secundario"
+                        ancho
+                        onClick={() => setDescartando(detalle)}
+                      >
+                        Descartar
+                      </Boton>
+                    )}
+                    {detalle.enlace && (
+                      <Link
+                        href={detalle.enlace}
+                        className="inline-flex min-h-[48px] w-full items-center justify-center rounded-[var(--radius-control)] bg-negro px-4 text-base font-medium text-blanco transition-colors hover:bg-carbon"
+                      >
+                        Ir a resolverla
+                      </Link>
+                    )}
+                  </div>
+                )}
+            </>
+          ) : (
+            <p className="px-4 py-10 text-center text-chico text-metadato">
+              Elegí una alerta de la lista para ver el detalle.
+            </p>
+          )}
+        </aside>
+      </div>
+
+      {/* Detalle de una alerta. En escritorio lo muestra el panel de la
+          derecha, así que la hoja se esconde. */}
+      <div className="lg:hidden">
       <HojaInferior
         abierta={detalle !== null}
         alCerrar={() => setDetalle(null)}
@@ -314,31 +372,9 @@ export function BandejaAlertas({
           ) : undefined
         }
       >
-        {detalle && (
-          <div className="space-y-3">
-            <Insignia tono={TONO_SEVERIDAD[detalle.severidad]}>
-              {TEXTO_SEVERIDAD[detalle.severidad]}
-            </Insignia>
-
-            <p className="text-base whitespace-pre-line text-grafito">
-              {detalle.detalle}
-            </p>
-
-            <div className="border-t border-niebla pt-3 text-menor text-metadato">
-              <p>Regla: {detalle.nombreRegla}</p>
-              <p>Abierta el {fechaCorta(detalle.creadaEn)}</p>
-              {detalle.resueltaEn && (
-                <p>
-                  {detalle.estado === EstadoAlerta.DESCARTADA
-                    ? 'Descartada'
-                    : 'Resuelta'}{' '}
-                  el {fechaCorta(detalle.resueltaEn)}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+        {detalle && <DetalleAlerta alerta={detalle} />}
       </HojaInferior>
+      </div>
 
       {/* Descartar */}
       <HojaInferior
@@ -361,6 +397,40 @@ export function BandejaAlertas({
           </Boton>
         </form>
       </HojaInferior>
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------------
+   El cuerpo del detalle de una alerta.
+
+   Lo usan la hoja inferior del celular y el panel de la derecha de
+   escritorio: el mismo contenido, en dos contenedores distintos.
+   --------------------------------------------------------------------- */
+
+function DetalleAlerta({ alerta }: { alerta: AlertaDeLista }) {
+  return (
+    <div className="space-y-3">
+      <Insignia tono={TONO_SEVERIDAD[alerta.severidad]}>
+        {TEXTO_SEVERIDAD[alerta.severidad]}
+      </Insignia>
+
+      <p className="text-base whitespace-pre-line text-grafito">
+        {alerta.detalle}
+      </p>
+
+      <div className="border-t border-niebla pt-3 text-menor text-metadato">
+        <p>Regla: {alerta.nombreRegla}</p>
+        <p>Abierta el {fechaCorta(alerta.creadaEn)}</p>
+        {alerta.resueltaEn && (
+          <p>
+            {alerta.estado === EstadoAlerta.DESCARTADA
+              ? 'Descartada'
+              : 'Resuelta'}{' '}
+            el {fechaCorta(alerta.resueltaEn)}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

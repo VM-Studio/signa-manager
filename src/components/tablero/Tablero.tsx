@@ -122,6 +122,7 @@ export function Tablero({
         <CampoSelect
           name="periodo"
           etiqueta="Período"
+          contenedorClassName="lg:max-w-[280px]"
           value={periodoClave}
           onChange={(e) => {
             const v = e.target.value
@@ -230,7 +231,10 @@ export function Tablero({
         Por unidad de negocio
       </TituloSeccion>
 
-      <div className="border-y border-niebla bg-blanco px-2 py-3">
+      {/* El gráfico y el detalle lado a lado: a 1664px poner uno debajo
+          del otro obliga a scrollear para comparar lo mismo. */}
+      <div className="lg:flex lg:items-start lg:gap-6">
+      <div className="border-y border-niebla bg-blanco px-2 py-3 lg:flex-1 lg:rounded-[var(--radius-panel)] lg:border">
         <BarrasPorUnidad
           datos={porUnidad.map((u) => ({
             nombre: u.nombre,
@@ -252,7 +256,7 @@ export function Tablero({
         />
       </div>
 
-      <Lista>
+      <Lista className="lg:w-[440px] lg:shrink-0 lg:rounded-[var(--radius-panel)] lg:border">
         {porUnidad.map((u) => (
           <FilaLista
             key={u.unidadId}
@@ -272,6 +276,7 @@ export function Tablero({
           />
         ))}
       </Lista>
+      </div>
 
       {/* ==================== BLOQUE 3: POR OBRA ====================== */}
       <TituloSeccion>Por obra</TituloSeccion>
@@ -283,8 +288,8 @@ export function Tablero({
       ) : (
         <>
           {/* En pantalla grande, tabla. En el celular, la lista de abajo. */}
-          <div className="scroll-lateral hidden border-y border-niebla bg-blanco sm:block">
-            <table className="w-full min-w-[720px] text-left">
+          <div className="scroll-lateral scroll-fino hidden border-y border-niebla bg-blanco sm:block">
+            <table className="w-full min-w-[720px] text-left lg:min-w-0">
               <thead>
                 <tr className="border-b border-niebla">
                   {['Obra', 'Ingresos', 'Costo', 'Resultado', 'Margen', 'Composición'].map(
@@ -377,7 +382,7 @@ export function Tablero({
 
       {/* ================= BLOQUE 5: OPERACIÓN HOY ==================== */}
       <TituloSeccion>La operación hoy</TituloSeccion>
-      <div className="grid grid-cols-2 gap-px border-y border-niebla bg-niebla sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-px border-y border-niebla bg-niebla sm:grid-cols-3 xl:grid-cols-6">
         <Simple
           etiqueta="Personas trabajando"
           valor={numero(operacion.personasTrabajando)}
@@ -418,7 +423,7 @@ export function Tablero({
       </div>
 
       {/* Exportar */}
-      <div className="grid grid-cols-2 gap-2 px-4 pt-6">
+      <div className="grid grid-cols-2 gap-2 px-4 pt-6 lg:max-w-[420px]">
         <a
           href={`/api/tablero/exportar?formato=csv&periodo=${periodoClave}&desde=${datos.periodo.desde.toISOString()}&hasta=${datos.periodo.hasta.toISOString()}`}
           className="flex min-h-[48px] items-center justify-center gap-2 rounded-[var(--radius-control)] border border-niebla bg-blanco text-base font-medium text-negro active:bg-hueso"

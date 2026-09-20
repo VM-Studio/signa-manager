@@ -15,6 +15,7 @@ import {
   Dato,
   EstadoVacio,
   FilaLista,
+  FichaDosColumnas,
   GrillaResumen,
   Insignia,
   Lista,
@@ -85,7 +86,7 @@ export function FichaObra({
   const base = `/obras/${obra.id}`
 
   return (
-    <>
+    <FichaDosColumnas panel={<PanelObra obra={obra} resumen={resumen} />}>
       <Pestanas
         activa={activa}
         pestanas={[
@@ -125,6 +126,113 @@ export function FichaObra({
       )}
       {activa === 'vehiculos' && vehiculos && <PanelVehiculos datos={vehiculos} />}
       {activa === 'compras' && compras && <PanelCompras pedidos={compras} />}
+    </FichaDosColumnas>
+  )
+}
+
+/* =====================================================================
+   El panel de la derecha: qué obra es.
+
+   Queda fijo mientras se recorren las pestañas, así no hay que volver
+   al resumen para ver de qué obra se está hablando.
+   ===================================================================== */
+
+function PanelObra({
+  obra,
+  resumen,
+}: {
+  obra: ObraVista
+  resumen: ResumenObra
+}) {
+  return (
+    <>
+      <TituloSeccion>En la obra ahora</TituloSeccion>
+      <GrillaResumen columnas={2}>
+        <NumeroResumen
+          etiqueta="Personas"
+          valor={numero(resumen.personasAsignadas)}
+        />
+        <NumeroResumen
+          etiqueta="Herramientas"
+          valor={numero(resumen.herramientasEnObra)}
+          detalle={
+            resumen.valorHerramientas > 0
+              ? monedaCorta(resumen.valorHerramientas)
+              : undefined
+          }
+        />
+        <NumeroResumen
+          etiqueta="Viajes del mes"
+          valor={numero(resumen.viajesDelMes)}
+        />
+      </GrillaResumen>
+
+      <TituloSeccion>Datos de la obra</TituloSeccion>
+      <div className="border-y border-niebla bg-blanco">
+        <ListaDatos>
+          <Dato etiqueta="Código">{obra.codigo}</Dato>
+          <Dato etiqueta="Unidad de negocio">{obra.unidadNegocio.nombre}</Dato>
+          {obra.cliente && <Dato etiqueta="Cliente">{obra.cliente}</Dato>}
+          <Dato etiqueta="Jefe de obra">{obra.jefeObra?.nombre ?? 'Sin asignar'}</Dato>
+          <Dato etiqueta="Ubicación">
+            {[obra.direccion, obra.localidad, obra.provincia]
+              .filter(Boolean)
+              .join(', ') || '—'}
+          </Dato>
+        </ListaDatos>
+      </div>
+
+      <TituloSeccion>Fechas</TituloSeccion>
+      <div className="border-y border-niebla bg-blanco">
+        <ListaDatos>
+          <Dato etiqueta="Inicio">{fechaCorta(obra.fechaInicio)}</Dato>
+          <Dato etiqueta="Fin previsto">{fechaCorta(obra.fechaFinPrevista)}</Dato>
+          {obra.fechaFinReal && (
+            <Dato etiqueta="Fin real">{fechaCorta(obra.fechaFinReal)}</Dato>
+          )}
+        </ListaDatos>
+      </div>
+
+      <TituloSeccion>Presupuesto</TituloSeccion>
+      <div className="border-y border-niebla bg-blanco">
+        <ListaDatos>
+          <Dato etiqueta="Total de la obra">
+            {obra.presupuestoTotal ? moneda(obra.presupuestoTotal) : '—'}
+          </Dato>
+          <Dato etiqueta="Mano de obra">
+            {obra.presupuestoManoObra ? moneda(obra.presupuestoManoObra) : '—'}
+          </Dato>
+          <Dato etiqueta="Gastado en mano de obra">
+            {moneda(resumen.costoManoObra)}
+          </Dato>
+        </ListaDatos>
+      </div>
+
+      {/* Si la obra viene del sistema base, se dice de dónde salen los
+          datos y cuándo se trajeron por última vez. */}
+      {obra.origen === OrigenDato.SISTEMA_BASE && (
+        <>
+          <TituloSeccion>Sistema base</TituloSeccion>
+          <div className="border-y border-niebla bg-blanco">
+            <ListaDatos>
+              <Dato etiqueta="Última sincronización">
+                {obra.ultimaSync ? (
+                  <span className="flex items-center gap-1.5">
+                    <RefreshCw aria-hidden className="size-3 text-metadato" />
+                    {haceCuanto(obra.ultimaSync)}
+                  </span>
+                ) : (
+                  'Nunca'
+                )}
+              </Dato>
+            </ListaDatos>
+            <p className="pb-4 text-menor text-metadato">
+              El código, el nombre, el cliente, el estado y el presupuesto
+              total se editan en el sistema base.
+            </p>
+          </div>
+        </>
+      )}
     </>
   )
 }
@@ -195,24 +303,6 @@ function PanelResumen({
         </>
       )}
 
-      <TituloSeccion>En la obra ahora</TituloSeccion>
-      <GrillaResumen columnas={3}>
-        <NumeroResumen
-          etiqueta="Personas"
-          valor={numero(resumen.personasAsignadas)}
-        />
-        <NumeroResumen
-          etiqueta="Herramientas"
-          valor={numero(resumen.herramientasEnObra)}
-          detalle={
-            resumen.valorHerramientas > 0
-              ? monedaCorta(resumen.valorHerramientas)
-              : undefined
-          }
-        />
-        <NumeroResumen etiqueta="Viajes del mes" valor={numero(resumen.viajesDelMes)} />
-      </GrillaResumen>
-
       {resumen.partesSinAprobar > 0 && (
         <div className="px-4 pb-1">
           <AvisoFijo tono="aviso" titulo="Hay partes sin aprobar">
@@ -226,72 +316,6 @@ function PanelResumen({
         </div>
       )}
 
-      <TituloSeccion>Datos de la obra</TituloSeccion>
-      <div className="border-y border-niebla bg-blanco">
-        <ListaDatos>
-          <Dato etiqueta="Código">{obra.codigo}</Dato>
-          <Dato etiqueta="Unidad de negocio">{obra.unidadNegocio.nombre}</Dato>
-          {obra.cliente && <Dato etiqueta="Cliente">{obra.cliente}</Dato>}
-          <Dato etiqueta="Jefe de obra">{obra.jefeObra?.nombre ?? 'Sin asignar'}</Dato>
-          <Dato etiqueta="Ubicación">
-            {[obra.direccion, obra.localidad, obra.provincia]
-              .filter(Boolean)
-              .join(', ') || '—'}
-          </Dato>
-        </ListaDatos>
-      </div>
-
-      <TituloSeccion>Fechas</TituloSeccion>
-      <div className="border-y border-niebla bg-blanco">
-        <ListaDatos>
-          <Dato etiqueta="Inicio">{fechaCorta(obra.fechaInicio)}</Dato>
-          <Dato etiqueta="Fin previsto">{fechaCorta(obra.fechaFinPrevista)}</Dato>
-          {obra.fechaFinReal && (
-            <Dato etiqueta="Fin real">{fechaCorta(obra.fechaFinReal)}</Dato>
-          )}
-        </ListaDatos>
-      </div>
-
-      <TituloSeccion>Presupuesto</TituloSeccion>
-      <div className="border-y border-niebla bg-blanco">
-        <ListaDatos>
-          <Dato etiqueta="Total de la obra">
-            {obra.presupuestoTotal ? moneda(obra.presupuestoTotal) : '—'}
-          </Dato>
-          <Dato etiqueta="Mano de obra">
-            {obra.presupuestoManoObra ? moneda(obra.presupuestoManoObra) : '—'}
-          </Dato>
-          <Dato etiqueta="Gastado en mano de obra">
-            {moneda(resumen.costoManoObra)}
-          </Dato>
-        </ListaDatos>
-      </div>
-
-      {/* Si la obra viene del sistema base, se dice de dónde salen los
-          datos y cuándo se trajeron por última vez. */}
-      {obra.origen === OrigenDato.SISTEMA_BASE && (
-        <>
-          <TituloSeccion>Sistema base</TituloSeccion>
-          <div className="border-y border-niebla bg-blanco">
-            <ListaDatos>
-              <Dato etiqueta="Última sincronización">
-                {obra.ultimaSync ? (
-                  <span className="flex items-center gap-1.5">
-                    <RefreshCw aria-hidden className="size-3 text-metadato" />
-                    {haceCuanto(obra.ultimaSync)}
-                  </span>
-                ) : (
-                  'Nunca'
-                )}
-              </Dato>
-            </ListaDatos>
-            <p className="pb-4 text-menor text-metadato">
-              El código, el nombre, el cliente, el estado y el presupuesto
-              total se editan en el sistema base.
-            </p>
-          </div>
-        </>
-      )}
     </>
   )
 }

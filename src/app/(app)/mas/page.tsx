@@ -35,12 +35,13 @@ export default async function PaginaMas() {
       {secciones.map((seccion) => (
         <section key={seccion.titulo}>
           <TituloSeccion>{seccion.titulo}</TituloSeccion>
-          <div className="divide-y divide-niebla border-y border-niebla bg-blanco">
+          {/* Lista en celular, tarjetas cuando hay ancho. */}
+          <div className="divide-y divide-niebla border-y border-niebla bg-blanco md:grid md:grid-cols-2 md:gap-3 md:divide-y-0 md:border-0 md:bg-transparent md:px-4 md:py-2 lg:grid-cols-3">
             {seccion.items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex min-h-[var(--toque-minimo)] items-center gap-3 px-4 py-3 active:bg-hueso"
+                className="flex min-h-[var(--toque-minimo)] items-center gap-3 bg-blanco px-4 py-3 transition-colors hover:bg-hueso active:bg-hueso md:rounded-[var(--radius-panel)] md:border md:border-niebla"
               >
                 <Icono
                   nombre={item.icono}
@@ -63,7 +64,7 @@ export default async function PaginaMas() {
         </section>
       ))}
 
-      <div className="px-4 pt-8">
+      <div className="px-4 pt-8 lg:max-w-[280px]">
         <BotonCerrarSesion />
       </div>
 

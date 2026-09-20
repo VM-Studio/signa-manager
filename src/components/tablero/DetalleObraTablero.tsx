@@ -108,23 +108,29 @@ export function DetalleObraTablero({
         <Insignia tono="neutro">{textoEnum(obra.estado)}</Insignia>
       </div>
 
-      {/* Evolución mensual */}
-      <TituloSeccion>Evolución de los últimos 6 meses</TituloSeccion>
-      <div className="border-y border-niebla bg-blanco px-2 py-3">
-        <LineaEvolucion
-          datos={evolucion.map((m) => ({
-            etiqueta: m.etiqueta,
-            ingresos: m.ingresos,
-            costos: m.costos,
-            resultado: m.resultado,
-          }))}
-        />
-      </div>
+      {/* La evolución y la composición del costo, lado a lado cuando hay
+          ancho: son las dos preguntas que se miran juntas. */}
+      <div className="lg:flex lg:items-start lg:gap-6">
+        <div className="min-w-0 lg:flex-1">
+          <TituloSeccion>Evolución de los últimos 6 meses</TituloSeccion>
+          <div className="border-y border-niebla bg-blanco px-2 py-3">
+            <LineaEvolucion
+              datos={evolucion.map((m) => ({
+                etiqueta: m.etiqueta,
+                ingresos: m.ingresos,
+                costos: m.costos,
+                resultado: m.resultado,
+              }))}
+            />
+          </div>
+        </div>
 
-      {/* Composición del costo */}
-      <TituloSeccion>De qué está hecho el costo</TituloSeccion>
-      <div className="border-y border-niebla bg-blanco px-4 py-4">
-        <BarraComposicion partes={partes} total={obra.costoTotal} />
+        <div className="min-w-0 lg:flex-1">
+          <TituloSeccion>De qué está hecho el costo</TituloSeccion>
+          <div className="border-y border-niebla bg-blanco px-4 py-4">
+            <BarraComposicion partes={partes} total={obra.costoTotal} />
+          </div>
+        </div>
       </div>
 
       <Lista>

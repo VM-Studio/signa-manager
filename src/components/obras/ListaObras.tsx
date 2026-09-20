@@ -5,12 +5,14 @@ import { Building2, MapPin } from 'lucide-react'
 import { EstadoObra } from '@prisma/client'
 import type { ObraDeLista } from '@/server/obras/queries'
 import {
-  BarraFiltros,
+  BarraFiltrosTabla,
   Buscador,
   ChipsFiltro,
   EstadoVacio,
   FilaLista,
-  Lista,
+  TablaAdaptable,
+  useAtajoBuscar,
+  type ColumnaTabla,
 } from '@/components/ui'
 import { InsigniaEstadoObra } from './EstadoObra'
 import { plural } from '@/lib/formato'
@@ -33,6 +35,7 @@ export function ListaObras({
   const [busqueda, setBusqueda] = useState('')
   const [estados, setEstados] = useState<string[]>([])
   const [unidadesElegidas, setUnidades] = useState<string[]>([])
+  const campoBusqueda = useAtajoBuscar()
 
   const filtradas = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -68,18 +71,83 @@ export function ListaObras({
       cantidad: conteoPorEstado[valor],
     }))
 
+  const columnas: Array<ColumnaTabla<ObraDeLista>> = [
+    {
+      clave: 'codigo',
+      titulo: 'Código',
+      ancho: '140px',
+      comparar: (a, b) => a.codigo.localeCompare(b.codigo, 'es'),
+      celda: (o) => <span className="cifras text-grafito">{o.codigo}</span>,
+    },
+    {
+      clave: 'nombre',
+      titulo: 'Obra',
+      comparar: (a, b) => a.nombre.localeCompare(b.nombre, 'es'),
+      celda: (o) => (
+        <span className="flex items-center gap-1.5">
+          <span className="font-medium text-negro">{o.nombre}</span>
+          {o.esInterior && (
+            <span
+              title="En el interior del país"
+              className="flex items-center gap-0.5 text-micro text-metadato"
+            >
+              <MapPin aria-hidden className="size-3" />
+              Interior
+            </span>
+          )}
+        </span>
+      ),
+    },
+    {
+      clave: 'unidad',
+      titulo: 'Unidad de negocio',
+      ancho: '200px',
+      comparar: (a, b) => a.unidadNegocio.localeCompare(b.unidadNegocio, 'es'),
+      celda: (o) => <span className="text-grafito">{o.unidadNegocio}</span>,
+    },
+    {
+      clave: 'cliente',
+      titulo: 'Cliente',
+      soloAncho: true,
+      comparar: (a, b) => (a.cliente ?? '').localeCompare(b.cliente ?? '', 'es'),
+      celda: (o) => o.cliente ?? <span className="text-acero">—</span>,
+    },
+    {
+      clave: 'jefe',
+      titulo: 'Jefe de obra',
+      comparar: (a, b) => (a.jefeObra ?? '').localeCompare(b.jefeObra ?? '', 'es'),
+      celda: (o) => o.jefeObra ?? <span className="text-acero">Sin asignar</span>,
+    },
+    {
+      clave: 'localidad',
+      titulo: 'Localidad',
+      soloAncho: true,
+      comparar: (a, b) =>
+        (a.localidad ?? '').localeCompare(b.localidad ?? '', 'es'),
+      celda: (o) => o.localidad ?? <span className="text-acero">—</span>,
+    },
+    {
+      clave: 'estado',
+      titulo: 'Estado',
+      ancho: '140px',
+      comparar: (a, b) => a.estado.localeCompare(b.estado),
+      celda: (o) => <InsigniaEstadoObra estado={o.estado} />,
+    },
+  ]
+
   return (
     <>
-      <BarraFiltros>
-        <div className="px-4 pt-3">
+      <BarraFiltrosTabla
+        buscador={
           <Buscador
+            ref={campoBusqueda}
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             alLimpiar={() => setBusqueda('')}
-            placeholder="Buscar por código, nombre o cliente…"
+            placeholder="Código, nombre o cliente…"
           />
-        </div>
-
+        }
+      >
         <ChipsFiltro
           chips={chipsEstado}
           activos={estados}
@@ -95,30 +163,34 @@ export function ListaObras({
             alCambiar={setUnidades}
             textoTodos="Todas las unidades"
             multiple
-            className="pt-0"
+            className="pt-0 lg:pt-0"
           />
         )}
-      </BarraFiltros>
+      </BarraFiltrosTabla>
 
       <p className="px-4 py-2 text-menor text-grafito">
         {plural(filtradas.length, 'obra')}
       </p>
 
-      {filtradas.length === 0 ? (
-        <EstadoVacio
-          titulo="No hay obras que coincidan"
-          mensaje={
-            busqueda || estados.length > 0 || unidadesElegidas.length > 0
-              ? 'Probá con otra búsqueda o sacá algún filtro.'
-              : 'Todavía no hay obras cargadas. Creá la primera.'
-          }
-          icono={<Building2 className="size-8" strokeWidth={1.5} />}
-        />
-      ) : (
-        <Lista>
-          {filtradas.map((o) => (
+      <TablaAdaptable
+        datos={filtradas}
+        columnas={columnas}
+        claveFila={(o) => o.id}
+        href={(o) => `/obras/${o.id}`}
+        ordenInicial={{ clave: 'codigo' }}
+        vacio={
+          <EstadoVacio
+            titulo="No hay obras que coincidan"
+            mensaje={
+              busqueda || estados.length > 0 || unidadesElegidas.length > 0
+                ? 'Probá con otra búsqueda o sacá algún filtro.'
+                : 'Todavía no hay obras cargadas. Creá la primera.'
+            }
+            icono={<Building2 className="size-8" strokeWidth={1.5} />}
+          />
+        }
+        filaMovil={(o) => (
             <FilaLista
-              key={o.id}
               titulo={o.nombre}
               subtitulo={`${o.codigo} · ${o.unidadNegocio}`}
               detalle={
@@ -138,9 +210,8 @@ export function ListaObras({
               }
               href={`/obras/${o.id}`}
             />
-          ))}
-        </Lista>
-      )}
+        )}
+      />
     </>
   )
 }
