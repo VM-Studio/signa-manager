@@ -88,8 +88,10 @@ export default async function PaginaAgenda({
           {/* Los vehículos en filas y sus viajes como bloques en el horario.
               Se desplaza de costado dentro de su contenedor, no arrastra la
               página. */}
-          <div className="scroll-lateral border-y border-niebla bg-blanco">
-            <div className="min-w-[640px]">
+          <div className="scroll-lateral scroll-fino border-y border-niebla bg-blanco">
+            {/* En celular se arrastra de costado dentro de su propio
+                contenedor; en escritorio entra entera. */}
+            <div className="min-w-[640px] lg:min-w-0">
               {/* Regla de horas */}
               <div className="flex border-b border-niebla">
                 <div className="w-[104px] shrink-0 px-3 py-1.5 text-micro text-metadato">

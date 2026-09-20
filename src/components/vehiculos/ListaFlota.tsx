@@ -5,14 +5,16 @@ import { Truck } from 'lucide-react'
 import { EstadoVehiculo, TipoVehiculo } from '@prisma/client'
 import type { ResumenFlota, VehiculoDeLista } from '@/server/vehiculos/queries'
 import {
-  BarraFiltros,
+  BarraFiltrosTabla,
   Buscador,
   ChipsFiltro,
   EstadoVacio,
   FilaLista,
   GrillaResumen,
+  TablaAdaptable,
+  useAtajoBuscar,
+  type ColumnaTabla,
   Insignia,
-  Lista,
   NumeroResumen,
 } from '@/components/ui'
 import { InsigniaEstadoVehiculo, TIPO_VEHICULO } from './estado'
@@ -33,6 +35,7 @@ export function ListaFlota({
   const [foco, setFoco] = useState<Foco>(focoInicial)
   const [tipos, setTipos] = useState<string[]>([])
   const [capacidadMinima, setCapacidadMinima] = useState<string[]>([])
+  const campoBusqueda = useAtajoBuscar()
 
   const filtrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -69,9 +72,117 @@ export function ListaFlota({
 
   const tiposPresentes = [...new Set(vehiculos.map((v) => v.tipo))] as TipoVehiculo[]
 
+  /*
+   * En escritorio la flota se mira en tabla: capacidad, chofer,
+   * kilómetros y el estado de los papeles de un vistazo. Es lo que se
+   * necesita para contestar "¿con qué mando este flete?" sin abrir
+   * vehículo por vehículo.
+   */
+  const columnas: Array<ColumnaTabla<VehiculoDeLista>> = [
+    {
+      clave: 'patente',
+      titulo: 'Patente',
+      ancho: '120px',
+      comparar: (a, b) => a.patente.localeCompare(b.patente, 'es'),
+      celda: (v) => (
+        <span className="cifras font-medium text-negro">{patente(v.patente)}</span>
+      ),
+    },
+    {
+      clave: 'vehiculo',
+      titulo: 'Vehículo',
+      comparar: (a, b) =>
+        `${a.marca} ${a.modelo}`.localeCompare(`${b.marca} ${b.modelo}`, 'es'),
+      celda: (v) => (
+        <span>
+          <span className="block text-negro">
+            {v.marca} {v.modelo}
+          </span>
+          <span className="block text-micro text-metadato">
+            {TIPO_VEHICULO[v.tipo]}
+            {v.interno ? ` · ${v.interno}` : ''}
+          </span>
+        </span>
+      ),
+    },
+    {
+      clave: 'capacidad',
+      titulo: 'Capacidad',
+      alineacion: 'derecha',
+      ancho: '110px',
+      comparar: (a, b) => (a.capacidadCargaKg ?? -1) - (b.capacidadCargaKg ?? -1),
+      celda: (v) =>
+        v.capacidadCargaKg ? (
+          peso(v.capacidadCargaKg)
+        ) : (
+          <span className="text-acero">—</span>
+        ),
+    },
+    {
+      clave: 'chofer',
+      titulo: 'Chofer habitual',
+      comparar: (a, b) => (a.chofer ?? '').localeCompare(b.chofer ?? '', 'es'),
+      celda: (v) => v.chofer ?? <span className="text-acero">Sin asignar</span>,
+    },
+    {
+      clave: 'km',
+      titulo: 'Kilómetros',
+      alineacion: 'derecha',
+      ancho: '120px',
+      comparar: (a, b) => a.kmActual - b.kmActual,
+      celda: (v) => kilometros(v.kmActual),
+    },
+    {
+      clave: 'donde',
+      titulo: 'Dónde está',
+      soloAncho: true,
+      celda: (v) =>
+        v.viajeActual ? (
+          <span className="text-grafito">
+            A {v.viajeActual.destino}
+            {v.viajeActual.obra ? ` · ${v.viajeActual.obra}` : ''}
+          </span>
+        ) : (
+          <span className="text-acero">En la base</span>
+        ),
+    },
+    {
+      clave: 'service',
+      titulo: 'Service',
+      ancho: '120px',
+      comparar: (a, b) => Number(a.serviceUrgente) - Number(b.serviceUrgente),
+      celda: (v) =>
+        v.serviceUrgente ? (
+          <Insignia tono="aviso">Próximo</Insignia>
+        ) : (
+          <span className="text-acero">—</span>
+        ),
+    },
+    {
+      clave: 'papeles',
+      titulo: 'Papeles',
+      ancho: '140px',
+      comparar: (a, b) => a.documentosVencidos - b.documentosVencidos,
+      celda: (v) =>
+        v.documentosVencidos > 0 ? (
+          <Insignia tono="critico">
+            {plural(v.documentosVencidos, 'vencido', 'vencidos')}
+          </Insignia>
+        ) : (
+          <Insignia tono="correcto">Al día</Insignia>
+        ),
+    },
+    {
+      clave: 'estado',
+      titulo: 'Estado',
+      ancho: '130px',
+      celda: (v) => <InsigniaEstadoVehiculo estado={v.estado} />,
+    },
+  ]
+
   return (
     <>
-      <GrillaResumen columnas={2}>
+      <GrillaResumen columnas={4}>
         <NumeroResumen
           etiqueta="Disponibles"
           valor={numero(resumen.disponibles)}
@@ -101,15 +212,17 @@ export function ListaFlota({
         />
       </GrillaResumen>
 
-      <BarraFiltros>
-        <div className="px-4 pt-3">
+      <BarraFiltrosTabla
+        buscador={
           <Buscador
+            ref={campoBusqueda}
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             alLimpiar={() => setBusqueda('')}
-            placeholder="Patente, marca, modelo o chofer…"
+            placeholder="Patente, marca o chofer…"
           />
-        </div>
+        }
+      >
         <ChipsFiltro
           chips={tiposPresentes.map((t) => ({
             valor: t,
@@ -130,25 +243,36 @@ export function ListaFlota({
           activos={capacidadMinima}
           alCambiar={setCapacidadMinima}
           textoTodos="Cualquier carga"
-          className="pt-0"
+          className="pt-0 lg:pt-0"
         />
-      </BarraFiltros>
+      </BarraFiltrosTabla>
 
       <p className="px-4 py-2 text-menor text-grafito">
         {plural(filtrados.length, 'vehículo')}
       </p>
 
-      {filtrados.length === 0 ? (
-        <EstadoVacio
-          titulo="No hay vehículos que coincidan"
-          mensaje="Probá con otra búsqueda o sacá algún filtro."
-          icono={<Truck className="size-8" strokeWidth={1.5} />}
-        />
-      ) : (
-        <Lista>
-          {filtrados.map((v) => (
+      <TablaAdaptable
+        datos={filtrados}
+        columnas={columnas}
+        claveFila={(v) => v.id}
+        href={(v) => `/vehiculos/${v.id}`}
+        tono={(v) =>
+          v.documentosVencidos > 0
+            ? 'critico'
+            : v.serviceUrgente
+              ? 'aviso'
+              : 'neutro'
+        }
+        ordenInicial={{ clave: 'patente' }}
+        vacio={
+          <EstadoVacio
+            titulo="No hay vehículos que coincidan"
+            mensaje="Probá con otra búsqueda o sacá algún filtro."
+            icono={<Truck className="size-8" strokeWidth={1.5} />}
+          />
+        }
+        filaMovil={(v) => (
             <FilaLista
-              key={v.id}
               titulo={patente(v.patente)}
               subtitulo={`${TIPO_VEHICULO[v.tipo]} · ${v.marca} ${v.modelo}${v.capacidadCargaKg ? ` · ${peso(v.capacidadCargaKg)}` : ''}`}
               detalle={
@@ -179,9 +303,8 @@ export function ListaFlota({
               }
               href={`/vehiculos/${v.id}`}
             />
-          ))}
-        </Lista>
-      )}
+        )}
+      />
     </>
   )
 }

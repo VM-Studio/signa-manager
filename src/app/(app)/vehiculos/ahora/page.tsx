@@ -6,7 +6,7 @@ import { SinPermiso } from '@/components/app/SinPermiso'
 import {
   EncabezadoPantalla,
   FilaLista,
-  Lista,
+  GrillaFichas,
   TituloSeccion,
 } from '@/components/ui'
 import { InsigniaEstadoVehiculo, TIPO_VEHICULO } from '@/components/vehiculos/estado'
@@ -65,7 +65,7 @@ export default async function PaginaAhora() {
       {enViaje.length > 0 && (
         <>
           <TituloSeccion>En viaje</TituloSeccion>
-          <Lista>
+          <GrillaFichas>
             {enViaje.map((v) => {
               const viaje = v.viajes[0]
               return (
@@ -96,7 +96,7 @@ export default async function PaginaAhora() {
                 />
               )
             })}
-          </Lista>
+          </GrillaFichas>
         </>
       )}
 
@@ -106,7 +106,7 @@ export default async function PaginaAhora() {
           No hay ningún vehículo libre ahora mismo.
         </p>
       ) : (
-        <Lista>
+        <GrillaFichas>
           {disponibles.map((v) => (
             <FilaLista
               key={v.id}
@@ -129,13 +129,13 @@ export default async function PaginaAhora() {
               href={`/vehiculos/${v.id}`}
             />
           ))}
-        </Lista>
+        </GrillaFichas>
       )}
 
       {parados.length > 0 && (
         <>
           <TituloSeccion>Parados</TituloSeccion>
-          <Lista>
+          <GrillaFichas>
             {parados.map((v) => (
               <FilaLista
                 key={v.id}
@@ -156,7 +156,7 @@ export default async function PaginaAhora() {
                 href={`/vehiculos/${v.id}`}
               />
             ))}
-          </Lista>
+          </GrillaFichas>
         </>
       )}
 

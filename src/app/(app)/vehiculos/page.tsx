@@ -5,7 +5,11 @@ import { puede } from '@/lib/auth/permisos'
 import { listarVehiculos, resumenFlota } from '@/server/vehiculos/queries'
 import { SinPermiso } from '@/components/app/SinPermiso'
 import { ListaFlota } from '@/components/vehiculos/ListaFlota'
-import { BotonFlotante, EncabezadoPantalla } from '@/components/ui'
+import {
+  BotonFlotante,
+  EncabezadoPantalla,
+  EnlaceBoton,
+} from '@/components/ui'
 
 export default async function PaginaVehiculos({
   searchParams,
@@ -44,9 +48,31 @@ export default async function PaginaVehiculos({
 
   return (
     <div className="pb-8">
-      <EncabezadoPantalla titulo="Vehículos" sinVolver />
+      <EncabezadoPantalla
+        titulo="Vehículos"
+        sinVolver
+        accion={
+          puede(sesion, 'vehiculos.aprobar') ? (
+            <div className="hidden items-center gap-2 lg:flex">
+              <EnlaceBoton tamano="chico" href="/vehiculos/viajes/nuevo">
+                Nuevo viaje
+              </EnlaceBoton>
+              <EnlaceBoton
+                tamano="chico"
+                variante="primario"
+                href="/vehiculos/nuevo"
+                iconoIzquierda={<Plus aria-hidden className="size-4" />}
+              >
+                Nuevo vehículo
+              </EnlaceBoton>
+            </div>
+          ) : undefined
+        }
+      />
 
-      <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-2.5">
+      {/* Los accesos del módulo están en las pestañas de la barra
+          superior: acá solo hacen falta en celular. */}
+      <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-2.5 lg:hidden">
         {accesos.map((a) => (
           <Link
             key={a.href}

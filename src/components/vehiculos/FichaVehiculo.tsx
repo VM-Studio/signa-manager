@@ -10,6 +10,7 @@ import {
   Dato,
   EnlaceBoton,
   EstadoVacio,
+  FichaDosColumnas,
   FilaLista,
   GrillaResumen,
   Insignia,
@@ -85,8 +86,13 @@ export function FichaVehiculo({
 
   const incidentesAbiertos = vehiculo.incidentes.filter((i) => !i.resuelto)
 
-  return (
-    <div className="pb-8">
+  /*
+   * A la derecha, qué es el vehículo y qué le pasa hoy. Las pestañas
+   * —viajes, combustible, mantenimiento, incidentes— son listas largas
+   * y se llevan el ancho.
+   */
+  const panel = (
+    <>
       <div className="flex flex-wrap items-center gap-2 border-b border-niebla bg-blanco px-4 py-3">
         <InsigniaEstadoVehiculo estado={vehiculo.estado} />
         <Insignia tono="neutro">{TIPO_VEHICULO[vehiculo.tipo]}</Insignia>
@@ -187,7 +193,7 @@ export function FichaVehiculo({
 
       {/* El costo del vehículo en el mes, arriba de todo */}
       <TituloSeccion>Este mes</TituloSeccion>
-      <GrillaResumen columnas={3}>
+      <GrillaResumen columnas={2}>
         <NumeroResumen
           etiqueta="Costo total"
           valor={monedaCorta(indicadores.costoDelMes.total)}
@@ -208,7 +214,11 @@ export function FichaVehiculo({
           tono={indicadores.consumoAnormal.anormal ? 'aviso' : 'neutro'}
         />
       </GrillaResumen>
+    </>
+  )
 
+  return (
+    <FichaDosColumnas panel={panel} className="pb-8">
       <Pestanas
         activa={pestana}
         alCambiar={setPestana}
@@ -600,6 +610,6 @@ export function FichaVehiculo({
         obras={obras}
         choferes={choferes}
       />
-    </div>
+    </FichaDosColumnas>
   )
 }
