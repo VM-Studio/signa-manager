@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
@@ -32,8 +33,29 @@ export function Pestanas({
   alCambiar,
   className,
 }: PestanasProps) {
+  const contenedor = useRef<HTMLDivElement>(null)
+
+  // Con cinco pestañas a 380px la activa puede quedar fuera de la pantalla.
+  // Se la trae a la vista, pero moviendo solo la tira, no la página entera.
+  useEffect(() => {
+    const tira = contenedor.current
+    const elegida = tira?.querySelector<HTMLElement>('[aria-selected="true"]')
+    if (!tira || !elegida) return
+
+    const margen = 16
+    const inicio = elegida.offsetLeft - margen
+    const fin = elegida.offsetLeft + elegida.offsetWidth + margen
+
+    if (inicio < tira.scrollLeft) {
+      tira.scrollTo({ left: inicio, behavior: 'smooth' })
+    } else if (fin > tira.scrollLeft + tira.clientWidth) {
+      tira.scrollTo({ left: fin - tira.clientWidth, behavior: 'smooth' })
+    }
+  }, [activa])
+
   return (
     <div
+      ref={contenedor}
       role="tablist"
       className={cn(
         'scroll-lateral sin-barra flex border-b border-niebla bg-blanco',
