@@ -77,6 +77,7 @@ const TITULOS: Array<[string, string]> = [
   ['/personal/subcontratistas', 'Subcontratistas'],
   ['/personal/cuadrillas', 'Cuadrillas'],
   ['/personal/planificacion', 'Planificación'],
+  ['/personal/partes/nuevo', 'Parte diario'],
   ['/personal/partes', 'Partes diarios'],
   ['/personal/quincenas', 'Quincenas'],
   ['/personal', 'Personal'],
