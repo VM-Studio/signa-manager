@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 
-// Provisorio: en el prompt 3 esta ruta pasa a ser el splash de inicio.
+/**
+ * La raíz no tiene pantalla propia: el middleware manda al login si no
+ * hay sesión, y si la hay, se entra directo al inicio del rol.
+ */
 export default function Raiz() {
-  redirect('/estilo')
+  redirect('/inicio')
 }

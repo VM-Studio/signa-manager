@@ -237,6 +237,12 @@ export function textoVencimiento(valor: FechaEntrada, desde: Date = new Date()):
 
 // ------------------------------- TEXTO --------------------------------
 
+/** "domingo 20 de septiembre" → "Domingo 20 de septiembre" */
+export function primeraMayuscula(texto: string): string {
+  if (!texto) return texto
+  return texto.charAt(0).toLocaleUpperCase('es-AR') + texto.slice(1)
+}
+
 /** "juan carlos pérez" → "Juan Carlos Pérez" */
 export function capitalizar(texto: string): string {
   return texto
