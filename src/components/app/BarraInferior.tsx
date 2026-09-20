@@ -9,6 +9,8 @@ import { cn } from '@/lib/cn'
 /* =====================================================================
    Barra inferior negra fija con hasta 5 accesos. El activo en blanco,
    los demás en gris. Los ítems que el rol no puede ver no aparecen.
+
+   Solo en celular y tablet: en escritorio manda la barra lateral.
    ===================================================================== */
 
 export function BarraInferior({ items }: { items: ItemNavegacion[] }) {
@@ -17,7 +19,7 @@ export function BarraInferior({ items }: { items: ItemNavegacion[] }) {
   return (
     <nav
       aria-label="Navegación principal"
-      className="pad-abajo-seguro sobre-negro fixed inset-x-0 bottom-0 z-30 bg-negro"
+      className="pad-abajo-seguro sobre-negro fixed inset-x-0 bottom-0 z-30 bg-negro lg:hidden"
     >
       <div className="mx-auto flex h-[var(--alto-barra-inferior)] max-w-[var(--ancho-operativo)] items-stretch">
         {items.map((item) => {

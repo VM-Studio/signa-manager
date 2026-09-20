@@ -17,8 +17,19 @@ const nextConfig: NextConfig = {
       {
         source: '/:ruta*',
         headers: [
-          // Nadie puede meter la app en un iframe: evita el clickjacking.
-          { key: 'X-Frame-Options', value: 'DENY' },
+          /*
+           * Nadie puede meter la app en un iframe: evita el clickjacking.
+           *
+           * En desarrollo se permite el mismo origen para poder abrir la
+           * app en un iframe angosto y revisar el diseño responsive sin
+           * depender del tamaño de la ventana del navegador. En
+           * producción sigue siendo DENY.
+           */
+          {
+            key: 'X-Frame-Options',
+            value:
+              process.env.NODE_ENV === 'development' ? 'SAMEORIGIN' : 'DENY',
+          },
           // El navegador no adivina el tipo de contenido.
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           // No se filtra la URL interna al salir a un sitio externo.

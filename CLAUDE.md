@@ -112,7 +112,35 @@ Identidad: negro, blanco y gris. Sobria, de estudio de arquitectura, no de start
 - Tipografía: **Archivo** (Google Fonts, vía `next/font`) para todo. Pesos 400, 500 y 700. Números con `tabular-nums` en listas y montos.
 - Sin gradientes, sin sombras difusas, sin tarjetas redondeadas idénticas para todo. Listas con divisores finos para datos; tarjetas solo para resúmenes. Radio de 6px en controles, 0 en listas.
 - Nada de etiquetas en mayúsculas espaciadas, nada de flechas en los botones, nada de animaciones de entrada en cada sección. La única animación protagonista es el splash de inicio. El resto del movimiento responde a acciones del usuario (abrir un panel, confirmar).
-- Móvil primero: diseñar para 380px de ancho. En escritorio el contenido se centra con ancho máximo de 480px para las pantallas operativas y 1100px para el tablero.
+- **Móvil primero, pero no solo móvil.** Se diseña para 380px y se escala hasta escritorio. En la obra se usa el celular; en la oficina, administración y el dueño lo usan en una pantalla grande y ahí tiene que verse como un sistema de gestión, no como una app de celular estirada.
+
+### Los cuatro anchos
+
+Un solo componente por pantalla, que se adapta con los breakpoints de Tailwind. **Nunca** duplicar pantallas ni lógica para escritorio y celular, y nunca detectar el dispositivo por user agent.
+
+| | Ancho | Navegación | Contenido |
+|---|---|---|---|
+| Celular | < 768px | Header negro arriba + barra inferior negra | Una columna |
+| Tablet | 768–1023px | La de celular | Dos columnas donde tenga sentido; listados como tabla reducida |
+| Escritorio | ≥ 1024px | Barra lateral negra + barra superior clara | Todo el ancho, 32px de margen |
+| Grande | ≥ 1680px | Igual | Se limita el ancho y se centra |
+
+Entre 1024 y 1279px la barra lateral queda en 72px, solo íconos. Desde 1280px, 256px con íconos y texto. Se puede contraer a mano y la preferencia se recuerda.
+
+### Reglas de presentación
+
+- **Listados:** en celular, filas táctiles. En escritorio, tabla de verdad: encabezados que ordenan al hacer clic, fila entera cliqueable con realce al pasar el mouse, números a la derecha con `tabular-nums`, insignias de estado en su columna. El ancho se aprovecha mostrando más columnas, no estirando las mismas.
+- **Filtros:** chips desplazables en celular, barra en una línea con el buscador a la izquierda en escritorio.
+- **Resúmenes en números:** grilla de 2 columnas en celular, fila de 4 o 5 arriba de la tabla en escritorio.
+- **Fichas de detalle:** en escritorio, dos columnas — la principal con las pestañas y a la derecha un panel fijo de 360px con lo clave y las acciones, que queda visible al desplazarse. En celular, una columna con ese panel arriba.
+- **Formularios y acciones:** el mismo componente es hoja inferior por debajo de 1024px y panel lateral derecho de 480px en escritorio. Los formularios largos van en dos columnas de campos en escritorio. Cierran con Escape y con clic afuera, y atrapan el foco.
+- **El botón flotante solo existe en celular.** En escritorio esa misma acción es un botón primario en la barra superior.
+- **Los submenús de cada módulo** son pestañas horizontales debajo de la barra superior en escritorio.
+- Nunca puede haber desplazamiento horizontal de la página. Una tabla ancha se desplaza dentro de su propio contenedor.
+- Todo lo que se toca, 48px de alto como mínimo, también en escritorio.
+- Estados al pasar el mouse en todo lo cliqueable, cursor correcto y foco visible con teclado.
+
+La barra lateral negra es el elemento de marca. El resto, sobrio y ordenado, con aire entre bloques y alineación consistente.
 - Respetar `env(safe-area-inset-*)`, `prefers-reduced-motion` y foco visible.
 - Estados vacíos con una frase que diga qué hacer ("Todavía no hay herramientas cargadas. Cargá la primera."). Errores que digan qué pasó y cómo seguir.
 

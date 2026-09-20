@@ -30,6 +30,9 @@ export function BotonFlotante({
   className,
 }: BotonFlotanteProps) {
   const clases = cn(
+    // Solo en celular y tablet: en escritorio la misma acción es un
+    // botón primario en la barra superior (regla de CLAUDE.md).
+    'lg:hidden',
     'fixed right-4 z-30 inline-flex min-h-[56px] items-center justify-center gap-2',
     'bg-negro text-blanco active:bg-carbon transition-colors',
     children ? 'rounded-full px-5 text-base font-medium' : 'size-14 rounded-full',

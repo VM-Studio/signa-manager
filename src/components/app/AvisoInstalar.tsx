@@ -83,12 +83,31 @@ export function AvisoInstalar() {
     else setVisible(false)
   }
 
+  /*
+   * Mientras la franja está a la vista, el contenido de la página se
+   * corre otro tanto hacia arriba. Antes tapaba el final del inicio: el
+   * aviso para instalar no puede comerse información de verdad.
+   *
+   * Se publica como variable en el <html> y la usa el padding de abajo
+   * del layout, así no hace falta que ningún componente sepa de esto.
+   */
+  useEffect(() => {
+    const raiz = document.documentElement
+    if (visible) raiz.style.setProperty('--alto-aviso-instalar', '60px')
+    else raiz.style.removeProperty('--alto-aviso-instalar')
+
+    return () => {
+      raiz.style.removeProperty('--alto-aviso-instalar')
+    }
+  }, [visible])
+
   if (!visible) return null
 
   return (
     <>
-      {/* Franja discreta arriba de la barra inferior. */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--alto-barra-inferior)+env(safe-area-inset-bottom,0px))] z-40 px-4 pb-2">
+      {/* Franja discreta arriba de la barra inferior. Nunca en escritorio:
+          la app se instala en el teléfono, no en la computadora. */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--alto-barra-inferior)+env(safe-area-inset-bottom,0px))] z-40 px-4 pb-2 lg:hidden">
         <div className="mx-auto flex max-w-[var(--ancho-operativo)] items-center gap-2 rounded-[var(--radius-control)] border border-niebla bg-blanco px-3 py-2.5 shadow-sm">
           <SquarePlus
             aria-hidden

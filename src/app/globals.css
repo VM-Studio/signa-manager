@@ -62,12 +62,24 @@
   --radius-hoja: 14px;
 
   /* --- medidas de la app --- */
-  --espaciado-app: 16px;        /* gutter lateral */
-  --alto-header: 52px;
-  --alto-barra-inferior: 60px;
-  --ancho-operativo: 480px;     /* pantallas operativas en escritorio */
-  --ancho-tablero: 1100px;      /* solo el tablero */
+  --espaciado-app: 16px;        /* gutter lateral en celular */
+  --alto-header: 52px;          /* header negro, solo en celular */
+  --alto-barra-inferior: 60px;  /* barra inferior, solo en celular */
   --toque-minimo: 48px;         /* alto mínimo de todo lo que se toca */
+
+  /* Ancho de la columna operativa EN CELULAR. En escritorio el contenido
+     usa todo el ancho: esto solo centra el contenido en una tablet
+     angosta y limita las hojas inferiores. */
+  --ancho-operativo: 480px;
+
+  /* --- escritorio (≥1024px) --- */
+  --ancho-lateral: 256px;         /* barra lateral con íconos y texto */
+  --ancho-lateral-angosto: 72px;  /* solo íconos, entre 1024 y 1279 */
+  --alto-barra-superior: 60px;    /* barra clara dentro del contenido */
+  --margen-escritorio: 32px;      /* aire a los costados del contenido */
+  --ancho-maximo: 1680px;         /* recién acá se limita y se centra */
+  --ancho-panel-ficha: 360px;     /* panel fijo de las fichas de detalle */
+  --ancho-panel-lateral: 480px;   /* la hoja, cuando es panel derecho */
 }
 
 /* =====================================================================
@@ -247,5 +259,129 @@ select.campo-select {
   }
   body {
     background: #fff;
+  }
+}
+
+/* =====================================================================
+   Escritorio
+   ===================================================================== */
+
+/* Ancho real de la barra lateral en este momento.
+
+   Lo usan la barra lateral (para su propio ancho) y el contenido (para
+   su margen izquierdo), así que nunca se pueden desincronizar.
+
+   El valor por defecto sale de los breakpoints, no de JavaScript: así
+   el servidor ya manda el ancho correcto y no hay salto al cargar.
+   Cuando la persona contrae o expande a mano, el componente pone
+   data-lateral en el <html> y gana la regla de abajo. */
+:root {
+  --ancho-lateral-actual: 0px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --ancho-lateral-actual: var(--ancho-lateral-angosto);
+  }
+
+  html[data-lateral="contraida"] {
+    --ancho-lateral-actual: var(--ancho-lateral-angosto);
+  }
+
+  html[data-lateral="expandida"] {
+    --ancho-lateral-actual: var(--ancho-lateral);
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --ancho-lateral-actual: var(--ancho-lateral);
+  }
+}
+
+/* El contenido usa todo el ancho disponible y recién a partir de
+   --ancho-maximo se limita y se centra. Es lo que evita la columna
+   angosta con los costados vacíos. */
+.contenido-app {
+  width: 100%;
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .contenido-app {
+    max-width: var(--ancho-maximo);
+    padding-inline: var(--margen-escritorio);
+  }
+}
+
+/* Realce de fila en las tablas: solo con mouse, para no dejar el estado
+   pegado después de un toque en el celular. */
+@media (hover: hover) {
+  .fila-tabla:hover {
+    background-color: var(--color-hueso);
+  }
+}
+
+/* La barra lateral en 72px muestra el nombre al pasar el mouse. */
+.globo-lateral {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+
+@media (hover: hover) {
+  .item-lateral:hover .globo-lateral,
+  .item-lateral:focus-visible .globo-lateral {
+    opacity: 1;
+  }
+}
+
+/* Barra de desplazamiento discreta dentro de los paneles largos. */
+.scroll-fino {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-niebla) transparent;
+}
+.scroll-fino::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-fino::-webkit-scrollbar-thumb {
+  background-color: var(--color-niebla);
+  border-radius: 4px;
+}
+.scroll-fino::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* La hoja entra desde abajo en celular y desde la derecha en escritorio.
+   Va por clase y no por estilo en línea para poder cambiarla con una
+   media query. */
+@keyframes panel-entra {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animar-hoja {
+  animation: hoja-entra 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (min-width: 1024px) {
+  .animar-hoja {
+    animation: panel-entra 200ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-hoja {
+    animation: none;
   }
 }

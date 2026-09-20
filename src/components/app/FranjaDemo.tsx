@@ -1,14 +1,15 @@
 /**
  * Franja fina que avisa que los datos son de ejemplo.
- * Solo aparece con MODO_DEMO en true. Se apoya justo debajo del header,
- * que es quien ya se corrió por el área segura del teléfono.
+ *
+ * Va en carbón con texto gris claro, no en ámbar: antes competía con
+ * los avisos de verdad y en una pantalla llena de alertas reales eso
+ * confunde. Es información de contexto, no un estado.
+ *
+ * Solo aparece con MODO_DEMO en true.
  */
 export function FranjaDemo() {
   return (
-    <p
-      className="fixed inset-x-0 z-20 bg-[var(--color-aviso-texto)] py-1 text-center text-micro font-medium text-blanco"
-      style={{ top: 'calc(var(--alto-header) + env(safe-area-inset-top, 0px))' }}
-    >
+    <p className="flex h-7 items-center justify-center bg-carbon px-4 text-center text-micro text-niebla">
       Versión de demostración con datos de ejemplo
     </p>
   )

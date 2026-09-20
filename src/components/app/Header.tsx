@@ -10,6 +10,9 @@ import { cn } from '@/lib/cn'
 /* =====================================================================
    Header negro fijo: logo chico a la izquierda, título de la sección en
    el centro y la campana de alertas con su contador a la derecha.
+
+   Solo en celular y tablet. De 1024px para arriba lo reemplazan la
+   barra lateral negra y la barra superior clara.
    ===================================================================== */
 
 export function Header({
@@ -25,8 +28,8 @@ export function Header({
   const titulo = tituloDeRuta(ruta)
 
   return (
-    <header className="pad-arriba-seguro sobre-negro fixed inset-x-0 top-0 z-30 bg-negro">
-      <div className="mx-auto flex h-[var(--alto-header)] max-w-[var(--ancho-tablero)] items-center gap-2 px-3">
+    <header className="pad-arriba-seguro sobre-negro fixed inset-x-0 top-0 z-30 bg-negro lg:hidden">
+      <div className="flex h-[var(--alto-header)] items-center gap-2 px-3">
         <Link
           href="/inicio"
           aria-label="Ir al inicio"
