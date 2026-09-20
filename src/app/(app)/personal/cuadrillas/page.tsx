@@ -24,7 +24,23 @@ export default async function PaginaCuadrillas() {
 
   return (
     <div className="pb-8">
-      <EncabezadoPantalla titulo="Cuadrillas" volverA="/personal" />
+      <EncabezadoPantalla
+        titulo="Cuadrillas"
+        volverA="/personal"
+        accion={
+          puede(sesion, 'personal.crear') ? (
+            <EnlaceBoton
+              tamano="chico"
+              variante="primario"
+              href="/personal/cuadrillas/nueva"
+              className="hidden lg:inline-flex"
+              iconoIzquierda={<Plus aria-hidden className="size-4" />}
+            >
+              Nueva cuadrilla
+            </EnlaceBoton>
+          ) : undefined
+        }
+      />
 
       {cuadrillas.length === 0 ? (
         <EstadoVacio

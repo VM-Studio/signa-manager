@@ -164,6 +164,16 @@ export function CargarParte({
     return { presentes, ausentes, totalHoras, extras }
   }, [personas])
 
+  /* El pie de la tabla de escritorio: lo que se mira antes de enviar. */
+  const totalPorColumna = useMemo(
+    () => ({
+      normales: personas.reduce((a, p) => a + p.horasNormales, 0),
+      extra50: personas.reduce((a, p) => a + p.horasExtra50, 0),
+      extra100: personas.reduce((a, p) => a + p.horasExtra100, 0),
+    }),
+    [personas],
+  )
+
   const cambiar = (id: string, cambios: Partial<PersonaParte>) => {
     setPersonas((p) =>
       p.map((persona) =>
@@ -401,7 +411,7 @@ export function CargarParte({
         {plural(personas.length, 'persona')}
       </TituloSeccion>
 
-      <div className="divide-y divide-niebla border-y border-niebla bg-blanco">
+      <div className="divide-y divide-niebla border-y border-niebla bg-blanco lg:hidden">
         {personas.map((p) => {
           const desplegada = abierta === p.id
           const problema = problemaDe(p.id)
@@ -581,6 +591,159 @@ export function CargarParte({
             </div>
           )
         })}
+      </div>
+
+      {/* ------------------- La misma carga, en tabla -------------------
+
+          En el celular el parte se carga persona por persona, con
+          botones grandes. En la oficina se carga de una, con el
+          tabulador: una fila por persona y las horas en columnas. Es el
+          mismo estado, dibujado distinto. */}
+      <div className="scroll-fino hidden overflow-x-auto border-y border-niebla bg-blanco lg:block">
+        <table className="w-full border-collapse text-base">
+          <thead>
+            <tr className="border-b border-niebla">
+              <th scope="col" className="bg-hueso px-3 py-2 text-left text-menor font-medium text-grafito">
+                Persona
+              </th>
+              <th scope="col" className="bg-hueso px-3 py-2 text-left text-menor font-medium text-grafito" style={{ width: '210px' }}>
+                Asistencia
+              </th>
+              <th scope="col" className="bg-hueso px-3 py-2 text-right text-menor font-medium text-grafito" style={{ width: '110px' }}>
+                Normales
+              </th>
+              <th scope="col" className="bg-hueso px-3 py-2 text-right text-menor font-medium text-grafito" style={{ width: '110px' }}>
+                Extra 50%
+              </th>
+              <th scope="col" className="bg-hueso px-3 py-2 text-right text-menor font-medium text-grafito" style={{ width: '110px' }}>
+                Extra 100%
+              </th>
+              <th scope="col" className="bg-hueso px-3 py-2 text-left text-menor font-medium text-grafito">
+                Qué hizo
+              </th>
+              <th scope="col" className="bg-hueso px-3 py-2" style={{ width: '48px' }}>
+                <span className="sr-only">Sacar del parte</span>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {personas.map((p) => {
+              const problema = problemaDe(p.id)
+
+              return (
+                <tr
+                  key={p.id}
+                  className={cn(
+                    'border-b border-niebla last:border-b-0',
+                    problema?.nivel === 'error' && 'border-l-2 border-l-critico',
+                    problema?.nivel === 'aviso' && 'border-l-2 border-l-aviso',
+                  )}
+                >
+                  <td className="px-3 py-1.5">
+                    <p className="truncate font-medium text-negro">
+                      {p.apellido}, {p.nombre}
+                    </p>
+                    <p className="truncate text-micro text-metadato">
+                      {p.legajo} · {textoEnum(p.categoria)}
+                      {!p.asignado && ' · agregado'}
+                    </p>
+                  </td>
+
+                  <td className="px-3 py-1.5">
+                    <select
+                      aria-label={`Asistencia de ${p.apellido}, ${p.nombre}`}
+                      value={p.asistencia}
+                      disabled={soloLectura}
+                      onChange={(e) =>
+                        cambiarAsistencia(p.id, e.target.value as Asistencia)
+                      }
+                      className="campo-select min-h-[40px] w-full rounded-[var(--radius-control)] border border-niebla bg-blanco px-2 text-base text-negro disabled:bg-hueso disabled:text-metadato"
+                    >
+                      {TODAS.map((a) => (
+                        <option key={a} value={a}>
+                          {TEXTO_ASISTENCIA[a]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+
+                  <CeldaHoras
+                    valor={p.horasNormales}
+                    etiqueta={`Horas normales de ${p.apellido}`}
+                    maximo={16}
+                    soloLectura={soloLectura}
+                    alCambiar={(v) => cambiar(p.id, { horasNormales: v })}
+                  />
+                  <CeldaHoras
+                    valor={p.horasExtra50}
+                    etiqueta={`Horas al 50% de ${p.apellido}`}
+                    maximo={8}
+                    soloLectura={soloLectura}
+                    alCambiar={(v) => cambiar(p.id, { horasExtra50: v })}
+                  />
+                  <CeldaHoras
+                    valor={p.horasExtra100}
+                    etiqueta={`Horas al 100% de ${p.apellido}`}
+                    maximo={8}
+                    soloLectura={soloLectura}
+                    alCambiar={(v) => cambiar(p.id, { horasExtra100: v })}
+                  />
+
+                  <td className="px-3 py-1.5">
+                    <input
+                      type="text"
+                      aria-label={`Qué hizo ${p.apellido}, ${p.nombre}`}
+                      value={p.tarea ?? ''}
+                      disabled={soloLectura}
+                      placeholder={p.especialidad ?? 'Tarea del día'}
+                      onChange={(e) => cambiar(p.id, { tarea: e.target.value })}
+                      className="min-h-[40px] w-full rounded-[var(--radius-control)] border border-niebla bg-blanco px-2 text-base text-negro placeholder:text-acero disabled:bg-hueso"
+                    />
+                  </td>
+
+                  <td className="px-2 py-1.5 text-center">
+                    {!p.asignado && !soloLectura && (
+                      <button
+                        type="button"
+                        aria-label={`Sacar a ${p.apellido} del parte`}
+                        onClick={() =>
+                          setPersonas((lista) => lista.filter((x) => x.id !== p.id))
+                        }
+                        className="flex size-9 items-center justify-center rounded-[var(--radius-control)] text-metadato transition-colors hover:bg-hueso hover:text-critico"
+                      >
+                        <X aria-hidden className="size-4" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+
+          {/* Los totales al pie: es lo que se mira antes de enviar. */}
+          <tfoot>
+            <tr className="border-t-2 border-niebla bg-hueso font-medium">
+              <td className="px-3 py-2 text-negro">
+                {plural(resumen.presentes, 'presente')}
+                {resumen.ausentes > 0 && ` · ${resumen.ausentes} ausente${resumen.ausentes === 1 ? '' : 's'}`}
+              </td>
+              <td className="px-3 py-2 text-right text-menor text-grafito">
+                Totales
+              </td>
+              <td className="cifras px-3 py-2 text-right text-negro">
+                {horas(totalPorColumna.normales)}
+              </td>
+              <td className="cifras px-3 py-2 text-right text-negro">
+                {horas(totalPorColumna.extra50)}
+              </td>
+              <td className="cifras px-3 py-2 text-right text-negro">
+                {horas(totalPorColumna.extra100)}
+              </td>
+              <td className="px-3 py-2" colSpan={2} />
+            </tr>
+          </tfoot>
+        </table>
       </div>
 
       {/* Subcontratistas */}
@@ -810,5 +973,48 @@ export function CargarParte({
         cargando={pendiente}
       />
     </div>
+  )
+}
+
+/* ---------------------------------------------------------------------
+   Una celda de horas de la tabla de escritorio.
+
+   Se selecciona sola al entrar con el tabulador: quien carga el parte
+   de sesenta personas escribe encima, no corrige carácter por carácter.
+   --------------------------------------------------------------------- */
+
+function CeldaHoras({
+  valor,
+  etiqueta,
+  maximo,
+  soloLectura,
+  alCambiar,
+}: {
+  valor: number
+  etiqueta: string
+  maximo: number
+  soloLectura: boolean
+  alCambiar: (valor: number) => void
+}) {
+  return (
+    <td className="px-3 py-1.5">
+      <input
+        type="number"
+        inputMode="decimal"
+        aria-label={etiqueta}
+        value={valor}
+        disabled={soloLectura}
+        min={0}
+        max={maximo}
+        step={0.5}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => alCambiar(Number(e.target.value) || 0)}
+        className={cn(
+          'cifras min-h-[40px] w-full rounded-[var(--radius-control)] border px-2 text-right text-base',
+          'border-niebla bg-blanco text-negro disabled:bg-hueso disabled:text-metadato',
+          valor === 0 && 'text-acero',
+        )}
+      />
+    </td>
   )
 }

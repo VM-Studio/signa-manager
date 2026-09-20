@@ -1,15 +1,19 @@
 import './sin-server-only'
 import { db } from '../../src/lib/db'
 async function main() {
-  const [h, e, s, v, o, viaje] = await Promise.all([
-    db.herramienta.findFirst({ where: { estado: 'EN_OBRA' }, select: { id: true } }),
-    db.empleado.findFirst({ where: { activo: true }, select: { id: true } }),
-    db.subcontratista.findFirst({ select: { id: true } }),
-    db.vehiculo.findFirst({ select: { id: true } }),
-    db.obra.findFirst({ where: { estado: 'EN_CURSO' }, select: { id: true } }),
-    db.viaje.findFirst({ select: { id: true } }),
-  ])
-  console.log(JSON.stringify({ herramienta: h?.id, empleado: e?.id, subcontratista: s?.id, vehiculo: v?.id, obra: o?.id, viaje: viaje?.id }))
+  const p = await db.parteDiario.findFirst({
+    where: { estado: 'BORRADOR' },
+    select: { obraId: true, fecha: true },
+  })
+  const q = await db.quincena.findFirst({ select: { id: true } })
+  const sol = await db.solicitudViaje.findFirst({ where: { estado: 'PENDIENTE' }, select: { id: true } })
+  const ale = await db.alerta.findFirst({ where: { estado: 'ABIERTA' }, select: { id: true } })
+  const obraConParte = await db.parteDiario.findFirst({ select: { obraId: true, fecha: true }, orderBy: { fecha: 'desc' } })
+  console.log(JSON.stringify({
+    parteBorrador: p ? `/personal/partes/nuevo?obra=${p.obraId}&fecha=${p.fecha.toISOString().slice(0,10)}` : null,
+    parteCualquiera: obraConParte ? `/personal/partes/nuevo?obra=${obraConParte.obraId}&fecha=${obraConParte.fecha.toISOString().slice(0,10)}` : null,
+    quincena: q?.id, solicitudViaje: sol?.id, alerta: ale?.id,
+  }))
   await db.$disconnect()
 }
 main()

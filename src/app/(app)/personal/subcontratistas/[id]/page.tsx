@@ -8,6 +8,7 @@ import {
   AvisoFijo,
   Dato,
   EncabezadoPantalla,
+  FichaDosColumnas,
   EstadoVacio,
   FilaLista,
   Insignia,
@@ -44,16 +45,32 @@ export default async function PaginaSubcontratista({
         volverA="/personal/subcontratistas"
       />
 
-      {puede(sesion, 'personal.editar') && (
-        <AccionesSubcontratista
-          subcontratista={{
-            id: s.id,
-            razonSocial: s.razonSocial,
-            activo: s.activo,
-          }}
-        />
-      )}
+      <FichaDosColumnas
+        panel={
+          <>
+            {puede(sesion, 'personal.editar') && (
+              <AccionesSubcontratista
+                subcontratista={{
+                  id: s.id,
+                  razonSocial: s.razonSocial,
+                  activo: s.activo,
+                }}
+              />
+            )}
 
+            <TituloSeccion>Datos</TituloSeccion>
+            <div className="border-y border-niebla bg-blanco lg:border-b-0">
+              <ListaDatos>
+                <Dato etiqueta="CUIT">{s.cuit}</Dato>
+                <Dato etiqueta="Rubro">{textoEnum(s.rubro)}</Dato>
+                <Dato etiqueta="Contacto">{s.contacto ?? '—'}</Dato>
+                <Dato etiqueta="Teléfono">{s.telefono ?? '—'}</Dato>
+                <Dato etiqueta="Email">{s.email ?? '—'}</Dato>
+              </ListaDatos>
+            </div>
+          </>
+        }
+      >
       {riesgoLegal && (
         <div className="px-4 pt-4">
           <AvisoFijo tono="critico" titulo="No debería estar trabajando">
@@ -72,17 +89,6 @@ export default async function PaginaSubcontratista({
           </AvisoFijo>
         </div>
       )}
-
-      <TituloSeccion>Datos</TituloSeccion>
-      <div className="border-y border-niebla bg-blanco">
-        <ListaDatos>
-          <Dato etiqueta="CUIT">{s.cuit}</Dato>
-          <Dato etiqueta="Rubro">{textoEnum(s.rubro)}</Dato>
-          <Dato etiqueta="Contacto">{s.contacto ?? '—'}</Dato>
-          <Dato etiqueta="Teléfono">{s.telefono ?? '—'}</Dato>
-          <Dato etiqueta="Email">{s.email ?? '—'}</Dato>
-        </ListaDatos>
-      </div>
 
       <TituloSeccion>Documentación</TituloSeccion>
       {s.documentos.length === 0 ? (
@@ -166,6 +172,7 @@ export default async function PaginaSubcontratista({
           ))}
         </Lista>
       )}
+      </FichaDosColumnas>
     </div>
   )
 }

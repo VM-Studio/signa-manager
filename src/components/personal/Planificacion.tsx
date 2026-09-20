@@ -22,6 +22,7 @@ import {
   TituloSeccion,
   useAvisos,
 } from '@/components/ui'
+import { cn } from '@/lib/cn'
 import { fechaCorta, plural, textoEnum } from '@/lib/formato'
 
 /* =====================================================================
@@ -116,6 +117,36 @@ export function Planificacion({
     })
   }
 
+  /*
+   * Los días de la semana que se está mirando. Se usan en la grilla de
+   * escritorio: obras en filas, días en columnas.
+   */
+  const dias: Date[] = []
+  for (
+    const d = new Date(desde);
+    d <= hasta;
+    d.setDate(d.getDate() + 1)
+  ) {
+    dias.push(new Date(d))
+  }
+
+  /** ¿Esta asignación cubre este día? */
+  const cubre = (a: AsignacionVista, dia: Date) => {
+    const inicio = new Date(a.desde)
+    inicio.setHours(0, 0, 0, 0)
+    if (dia < inicio) return false
+    if (!a.hasta) return true
+    const fin = new Date(a.hasta)
+    fin.setHours(23, 59, 59, 999)
+    return dia <= fin
+  }
+
+  /** Cuánta gente cubre una obra un día: contando los de cada cuadrilla. */
+  const gentePorDia = (obraId: string, dia: Date) =>
+    asignaciones
+      .filter((a) => a.obraId === obraId && cubre(a, dia))
+      .reduce((total, a) => total + (a.cuadrilla ? a.cuadrilla.miembros : 1), 0)
+
   return (
     <div className="pb-8">
       {/* Navegación entre semanas */}
@@ -165,6 +196,99 @@ export function Planificacion({
             ))}
           </Lista>
         </>
+      )}
+
+      {/* --------------- La semana completa, en escritorio ---------------
+
+          Obras en filas y días en columnas: de un vistazo se ve dónde
+          falta gente y qué obra quedó vacía el jueves. En el celular no
+          entra, así que ahí se sigue viendo obra por obra. */}
+      {obras.length > 0 && (
+        <div className="scroll-fino hidden overflow-x-auto border-y border-niebla bg-blanco lg:block">
+          <table className="w-full min-w-[820px] border-collapse text-base">
+            <thead>
+              <tr className="border-b border-niebla">
+                <th
+                  scope="col"
+                  className="sticky left-0 z-10 bg-hueso px-3 py-2 text-left text-menor font-medium text-grafito"
+                  style={{ width: '280px' }}
+                >
+                  Obra
+                </th>
+                {dias.map((d) => {
+                  const finde = d.getDay() === 0 || d.getDay() === 6
+                  return (
+                    <th
+                      key={d.toISOString()}
+                      scope="col"
+                      className={cn(
+                        'border-l border-niebla px-2 py-2 text-center text-menor font-medium',
+                        finde ? 'bg-niebla text-metadato' : 'bg-hueso text-grafito',
+                      )}
+                    >
+                      <span className="block capitalize">
+                        {d.toLocaleDateString('es-AR', { weekday: 'short' })}
+                      </span>
+                      <span className="cifras block text-micro text-metadato">
+                        {d.getDate()}
+                      </span>
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+
+            <tbody>
+              {obras.map((obra) => (
+                <tr key={obra.id} className="border-b border-niebla last:border-b-0">
+                  <th
+                    scope="row"
+                    className="sticky left-0 z-10 bg-blanco px-3 py-2 text-left font-normal"
+                  >
+                    <Link
+                      href={`/obras/${obra.id}`}
+                      className="block truncate font-medium text-negro hover:underline"
+                    >
+                      {obra.nombre}
+                    </Link>
+                    <span className="cifras block text-micro text-metadato">
+                      {obra.codigo}
+                      {obra.esInterior && ' · interior'}
+                    </span>
+                  </th>
+
+                  {dias.map((d) => {
+                    const cantidad = gentePorDia(obra.id, d)
+                    const finde = d.getDay() === 0 || d.getDay() === 6
+
+                    return (
+                      <td
+                        key={d.toISOString()}
+                        className={cn(
+                          'cifras border-l border-niebla px-2 py-2 text-center',
+                          finde && 'bg-hueso',
+                        )}
+                      >
+                        {cantidad > 0 ? (
+                          <span
+                            className="inline-flex min-w-[28px] justify-center rounded-[var(--radius-control)] bg-niebla px-1.5 py-0.5 font-medium text-negro"
+                            title={`${cantidad} en obra`}
+                          >
+                            {cantidad}
+                          </span>
+                        ) : (
+                          <span className="text-acero" title="Nadie asignado">
+                            —
+                          </span>
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Una sección por obra */}

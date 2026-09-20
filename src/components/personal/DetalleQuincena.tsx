@@ -16,10 +16,11 @@ import {
   Boton,
   Dato,
   FilaLista,
+  TablaAdaptable,
+  type ColumnaTabla,
   GrillaResumen,
   HojaInferior,
   Insignia,
-  Lista,
   ListaDatos,
   NumeroResumen,
   Pestanas,
@@ -123,6 +124,170 @@ export function DetalleQuincena({
 
   const sinCobrar = empleados.filter((e) => !e.cobro).length
 
+  /*
+   * La quincena en escritorio: todas las columnas de horas y costos a
+   * la vista, sin desplazarse. Es la pantalla contra la que
+   * administración discute cada quincena, y tener que abrir fila por
+   * fila para ver las extras hacía imposible compararlas.
+   */
+  const columnasEmpleados: Array<ColumnaTabla<EmpleadoQuincena>> = [
+    {
+      clave: 'legajo',
+      titulo: 'Legajo',
+      ancho: '90px',
+      comparar: (a, b) => a.legajo.localeCompare(b.legajo, 'es'),
+      celda: (e) => <span className="cifras text-grafito">{e.legajo}</span>,
+    },
+    {
+      clave: 'nombre',
+      titulo: 'Empleado',
+      comparar: (a, b) => a.nombre.localeCompare(b.nombre, 'es'),
+      celda: (e) => <span className="font-medium text-negro">{e.nombre}</span>,
+    },
+    {
+      clave: 'obras',
+      titulo: 'Obras',
+      soloAncho: true,
+      celda: (e) => (
+        <span className="text-grafito">{e.obras.join(', ') || '—'}</span>
+      ),
+    },
+    {
+      clave: 'dias',
+      titulo: 'Días',
+      alineacion: 'derecha',
+      ancho: '70px',
+      comparar: (a, b) => a.dias - b.dias,
+      celda: (e) => numero(e.dias),
+    },
+    {
+      clave: 'normales',
+      titulo: 'Normales',
+      alineacion: 'derecha',
+      ancho: '95px',
+      comparar: (a, b) => a.horasNormales - b.horasNormales,
+      celda: (e) => horas(e.horasNormales),
+    },
+    {
+      clave: 'extra50',
+      titulo: 'Al 50%',
+      alineacion: 'derecha',
+      ancho: '85px',
+      comparar: (a, b) => a.horasExtra50 - b.horasExtra50,
+      celda: (e) =>
+        e.horasExtra50 > 0 ? (
+          <span className="text-aviso">{horas(e.horasExtra50)}</span>
+        ) : (
+          <span className="text-acero">—</span>
+        ),
+    },
+    {
+      clave: 'extra100',
+      titulo: 'Al 100%',
+      alineacion: 'derecha',
+      ancho: '90px',
+      comparar: (a, b) => a.horasExtra100 - b.horasExtra100,
+      celda: (e) =>
+        e.horasExtra100 > 0 ? (
+          <span className="text-aviso">{horas(e.horasExtra100)}</span>
+        ) : (
+          <span className="text-acero">—</span>
+        ),
+    },
+    {
+      clave: 'ausencias',
+      titulo: 'Ausencias',
+      alineacion: 'derecha',
+      ancho: '95px',
+      soloAncho: true,
+      comparar: (a, b) => a.ausencias - b.ausencias,
+      celda: (e) =>
+        e.ausencias > 0 ? (
+          <span className="text-critico">{numero(e.ausencias)}</span>
+        ) : (
+          <span className="text-acero">—</span>
+        ),
+    },
+    {
+      clave: 'costo',
+      titulo: 'Mano de obra',
+      alineacion: 'derecha',
+      ancho: '130px',
+      comparar: (a, b) => a.costo - b.costo,
+      celda: (e) => moneda(e.costo),
+    },
+    {
+      clave: 'novedades',
+      titulo: 'Novedades',
+      alineacion: 'derecha',
+      ancho: '120px',
+      comparar: (a, b) => a.novedades - b.novedades,
+      celda: (e) =>
+        e.novedades !== 0 ? (
+          moneda(e.novedades)
+        ) : (
+          <span className="text-acero">—</span>
+        ),
+    },
+    {
+      clave: 'neto',
+      titulo: 'Neto',
+      alineacion: 'derecha',
+      ancho: '130px',
+      comparar: (a, b) => a.neto - b.neto,
+      celda: (e) => <span className="font-medium text-negro">{moneda(e.neto)}</span>,
+    },
+    ...(abierta
+      ? []
+      : [
+          {
+            clave: 'cobro',
+            titulo: 'Pago',
+            ancho: '110px',
+            comparar: (a: EmpleadoQuincena, b: EmpleadoQuincena) =>
+              Number(a.cobro) - Number(b.cobro),
+            celda: (e: EmpleadoQuincena) => (
+              <Insignia tono={e.cobro ? 'correcto' : 'aviso'}>
+                {e.cobro ? 'Cobró' : 'Sin pagar'}
+              </Insignia>
+            ),
+          },
+        ]),
+  ]
+
+  const columnasObras: Array<ColumnaTabla<ObraQuincena>> = [
+    {
+      clave: 'obra',
+      titulo: 'Obra',
+      comparar: (a, b) => a.obra.localeCompare(b.obra, 'es'),
+      celda: (o) => <span className="font-medium text-negro">{o.obra}</span>,
+    },
+    {
+      clave: 'personas',
+      titulo: 'Personas',
+      alineacion: 'derecha',
+      ancho: '110px',
+      comparar: (a, b) => a.personas - b.personas,
+      celda: (o) => numero(o.personas),
+    },
+    {
+      clave: 'horas',
+      titulo: 'Horas',
+      alineacion: 'derecha',
+      ancho: '110px',
+      comparar: (a, b) => a.horas - b.horas,
+      celda: (o) => horas(o.horas),
+    },
+    {
+      clave: 'costo',
+      titulo: 'Mano de obra',
+      alineacion: 'derecha',
+      ancho: '150px',
+      comparar: (a, b) => a.costo - b.costo,
+      celda: (o) => <span className="font-medium text-negro">{moneda(o.costo)}</span>,
+    },
+  ]
+
   return (
     <div className="pb-8">
       <div className="flex flex-wrap items-center gap-2 border-b border-niebla bg-blanco px-4 py-3">
@@ -221,10 +386,15 @@ export function DetalleQuincena({
       />
 
       {vista === 'empleados' ? (
-        <Lista>
-          {empleados.map((e) => (
+        <TablaAdaptable
+          datos={empleados}
+          columnas={columnasEmpleados}
+          claveFila={(e) => e.empleadoId}
+          href={(e) => `/personal/empleados/${e.empleadoId}`}
+          ordenInicial={{ clave: 'nombre' }}
+          porPagina={100}
+          filaMovil={(e) => (
             <FilaLista
-              key={e.empleadoId}
               titulo={e.nombre}
               subtitulo={`Legajo ${e.legajo} · ${plural(e.dias, 'día')} · ${horas(e.horasNormales + e.horasExtra50 + e.horasExtra100)}`}
               detalle={
@@ -249,20 +419,25 @@ export function DetalleQuincena({
               }
               href={`/personal/empleados/${e.empleadoId}`}
             />
-          ))}
-        </Lista>
+          )}
+        />
       ) : (
-        <Lista>
-          {obras.map((o) => (
+        <TablaAdaptable
+          datos={obras}
+          columnas={columnasObras}
+          claveFila={(o) => o.obraId}
+          href={(o) => `/obras/${o.obraId}?pestana=personal`}
+          ordenInicial={{ clave: 'costo', descendente: true }}
+          porPagina={100}
+          filaMovil={(o) => (
             <FilaLista
-              key={o.obraId}
               titulo={o.obra}
               subtitulo={`${plural(o.personas, 'persona')} · ${horas(o.horas)}`}
               derecha={moneda(o.costo)}
               href={`/obras/${o.obraId}?pestana=personal`}
             />
-          ))}
-        </Lista>
+          )}
+        />
       )}
 
       {!abierta && (

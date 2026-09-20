@@ -46,7 +46,7 @@ export function AccionesSubcontratista({
 
   return (
     <>
-      <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-3">
+      <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-3 lg:flex-wrap lg:overflow-visible">
         <EnlaceBoton
           tamano="chico"
           href={`/personal/subcontratistas/${subcontratista.id}/editar`}

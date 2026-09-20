@@ -6,6 +6,7 @@ import { SinPermiso } from '@/components/app/SinPermiso'
 import {
   BotonFlotante,
   EncabezadoPantalla,
+  EnlaceBoton,
   EstadoVacio,
   FilaLista,
   Insignia,
@@ -21,7 +22,23 @@ export default async function PaginaSubcontratistas() {
 
   return (
     <div className="pb-8">
-      <EncabezadoPantalla titulo="Subcontratistas" volverA="/personal" />
+      <EncabezadoPantalla
+        titulo="Subcontratistas"
+        volverA="/personal"
+        accion={
+          puede(sesion, 'personal.crear') ? (
+            <EnlaceBoton
+              tamano="chico"
+              variante="primario"
+              href="/personal/subcontratistas/nuevo"
+              className="hidden lg:inline-flex"
+              iconoIzquierda={<Plus aria-hidden className="size-4" />}
+            >
+              Nuevo subcontratista
+            </EnlaceBoton>
+          ) : undefined
+        }
+      />
 
       {subcontratistas.length === 0 ? (
         <EstadoVacio

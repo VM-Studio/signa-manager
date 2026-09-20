@@ -9,6 +9,7 @@ import {
   Boton,
   Dato,
   EnlaceBoton,
+  FichaDosColumnas,
   EstadoVacio,
   FilaLista,
   Insignia,
@@ -89,8 +90,14 @@ export function FichaEmpleado({
   )
   const cuadrilla = empleado.cuadrillas[0]?.cuadrilla ?? null
 
-  return (
-    <div className="pb-8">
+  /*
+   * El panel de la derecha contesta "¿quién es y qué le pasa?". Las
+   * pestañas —asistencia, documentación, historial— se llevan el ancho,
+   * que es donde un calendario de 31 días o una lista de movimientos se
+   * agradecen.
+   */
+  const panel = (
+    <>
       <div className="flex items-start gap-3 border-b border-niebla bg-blanco px-4 py-4">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-niebla text-titulo font-medium text-grafito">
           {empleado.nombre.charAt(0)}
@@ -118,7 +125,7 @@ export function FichaEmpleado({
       </div>
 
       {puedeEditar && (
-        <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-3">
+        <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-3 lg:flex-wrap lg:overflow-visible">
           <EnlaceBoton
             tamano="chico"
             href={`/personal/empleados/${empleado.id}/editar`}
@@ -157,7 +164,7 @@ export function FichaEmpleado({
       )}
 
       {docsVencidos.length > 0 && (
-        <div className="px-4 pt-4">
+        <div className="px-4 py-4">
           <AvisoFijo tono="critico" titulo="Documentación vencida">
             {docsVencidos.map((d) => textoEnum(d.tipo)).join(', ')}. Por
             seguridad y por responsabilidad legal no debería entrar a la obra
@@ -165,7 +172,11 @@ export function FichaEmpleado({
           </AvisoFijo>
         </div>
       )}
+    </>
+  )
 
+  return (
+    <FichaDosColumnas panel={panel} className="pb-8">
       <Pestanas
         activa={pestana}
         alCambiar={setPestana}
@@ -564,6 +575,6 @@ export function FichaEmpleado({
         empleado={empleado}
         obras={obras}
       />
-    </div>
+    </FichaDosColumnas>
   )
 }

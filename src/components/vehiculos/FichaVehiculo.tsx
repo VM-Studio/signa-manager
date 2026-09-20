@@ -97,7 +97,7 @@ export function FichaVehiculo({
       </div>
 
       {(puedeGestionar || puedeCargarCombustible) && (
-        <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-3">
+        <div className="scroll-lateral sin-barra flex gap-2 border-b border-niebla bg-blanco px-4 py-3 lg:flex-wrap lg:overflow-visible">
           {puedeCargarCombustible && (
             <Boton
               tamano="chico"
