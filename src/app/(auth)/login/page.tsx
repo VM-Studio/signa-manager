@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'Ingresar · Signa' }
 
    En celular, el logo arriba y el formulario debajo, sobre negro, como
    estaba. En escritorio se parte en dos: la mitad izquierda negra con
-   el logo grande —que es la marca— y la derecha clara con el
+   solo el logo grande —que es la marca— y la derecha clara con el
    formulario, que es donde va la atención.
    ===================================================================== */
 
@@ -38,11 +38,6 @@ export default async function PaginaLogin({
             priority
             className="w-[160px] lg:w-[280px]"
           />
-
-          <p className="mt-6 hidden text-titulo text-acero lg:block">
-            El pañol, la gente, los vehículos y el costo real de cada obra,
-            en un solo lugar.
-          </p>
         </div>
       </div>
 
