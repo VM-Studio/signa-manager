@@ -33,7 +33,19 @@ function paso(nombre, comando, argumentos, entorno = {}) {
 
 /* ------------------------- 1. Lo que hace falta ----------------------- */
 
-const FALTANTES = ['DATABASE_URL', 'AUTH_SECRET'].filter((v) => !process.env[v])
+/**
+ * Una variable vacía es lo mismo que una variable que no está.
+ *
+ * Importa: en Vercel es facilísimo dejar una cargada con el valor vacío,
+ * y `??` no la considera ausente. Todo el script usa esto en vez de
+ * leer process.env directo.
+ */
+const leer = (nombre) => {
+  const v = process.env[nombre]
+  return v && v.trim() !== '' ? v.trim() : undefined
+}
+
+const FALTANTES = ['DATABASE_URL', 'AUTH_SECRET'].filter((v) => !leer(v))
 
 if (FALTANTES.length > 0) {
   morir(
@@ -57,21 +69,95 @@ pooler y las migraciones no corren por ahí. En ese caso cargá también:
   )
 }
 
-/* --------------------------- 2. El cliente ---------------------------- */
+/* --------------------- 2. Que la URL sea de verdad -------------------- */
+
+/*
+ * No alcanza con que la variable exista: lo que más pasa es cargar en
+ * Vercel la URL local, sea copiándola del .env de la máquina o pegando
+ * el ejemplo de .env.example. El build entonces sale a buscar una base
+ * en localhost, que en Vercel no existe, y Prisma contesta
+ * "Can't reach database server at localhost:5432", que no da ninguna
+ * pista de que el problema es la variable.
+ */
+const LOCALES = ['localhost', '127.0.0.1', '0.0.0.0', '::1']
+
+function revisarUrl(nombre, valor) {
+  let host
+  try {
+    host = new URL(valor).hostname
+  } catch {
+    morir(
+      `${nombre} no es una URL válida`,
+      `
+Tiene que tener esta forma:
+
+  postgresql://usuario:contraseña@host:5432/base?sslmode=require
+
+Si la contraseña tiene símbolos, van codificados: @ es %40, # es %23,
+/ es %2F, : es %3A.
+`,
+    )
+  }
+
+  if (LOCALES.includes(host)) {
+    /*
+     * Solo es un error EN Vercel. Correr este mismo script en tu máquina
+     * contra la base local es perfectamente razonable —sirve para probar
+     * que el build de producción pasa— así que ahí solo se avisa.
+     * VERCEL=1 lo pone la plataforma sola.
+     */
+    if (!leer('VERCEL')) {
+      console.log(
+        `${GRIS}  (${nombre} apunta a ${host}: bien para local, no serviría en Vercel)${FIN}`,
+      )
+      return
+    }
+
+    morir(
+      `${nombre} apunta a ${host}: esa es tu base local`,
+      `
+Vercel corre el build en sus servidores, donde no hay ningún PostgreSQL
+en ${host}. Hay que cargar la URL de la base de producción.
+
+Lo que suele pasar es que se copió el valor del .env de tu máquina, o el
+de ejemplo de .env.example. Ese archivo es una plantilla: los valores de
+adentro no sirven en producción.
+
+Dónde conseguir la buena:
+
+  Neon       Dashboard > Connection string
+  Supabase   Project Settings > Database > Connection string
+  Railway    El servicio Postgres > Variables > DATABASE_URL
+
+Después cargala en Vercel, en Settings > Environment Variables, para
+Production, Preview y Development, y volvé a desplegar.
+`,
+    )
+  }
+}
+
+revisarUrl('DATABASE_URL', leer('DATABASE_URL'))
+if (leer('DIRECT_URL')) revisarUrl('DIRECT_URL', leer('DIRECT_URL'))
+
+/* --------------------------- 3. El cliente ---------------------------- */
 
 paso('Generando el cliente de Prisma', 'npx', ['prisma', 'generate'])
 
-/* ------------------------- 3. Las migraciones ------------------------- */
+/* ------------------------- 4. Las migraciones ------------------------- */
 
 /*
  * Neon y Supabase entregan una conexión por pooler (pgbouncer). Sirve
  * para consultar, pero no para migrar: las migraciones toman un lock y
  * usan sentencias preparadas, que el pooler no sostiene. Si está
  * DIRECT_URL, se migra por ahí y la app sigue usando el pooler.
+ *
+ * Se usa `leer` y no process.env directo porque una DIRECT_URL cargada
+ * pero vacía tiene que comportarse como si no estuviera: con `??` la
+ * cadena vacía gana y se migraría contra nada.
  */
-const urlParaMigrar = process.env.DIRECT_URL ?? process.env.DATABASE_URL
+const urlParaMigrar = leer('DIRECT_URL') ?? leer('DATABASE_URL')
 
-if (process.env.DIRECT_URL) {
+if (leer('DIRECT_URL')) {
   console.log(`${GRIS}  (migrando por DIRECT_URL, no por el pooler)${FIN}`)
 }
 
@@ -100,7 +186,7 @@ falle acá y no que ande a medias en producción.
   )
 }
 
-/* ---------------------------- 4. El build ----------------------------- */
+/* ---------------------------- 5. El build ----------------------------- */
 
 paso('Compilando la app', 'npx', ['next', 'build'])
 

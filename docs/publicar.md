@@ -183,9 +183,18 @@ códigos QR de las herramientas llevan esa URL adentro.
 **El deployment falla y el log habla de cron.**
 Es el plan Hobby: solo admite cron diarios. Ver el paso 7.
 
+**El build falla con "Can't reach database server at localhost:5432".**
+La `DATABASE_URL` cargada en Vercel es la de tu máquina. Suele pasar por
+copiar el valor del `.env` local o el de ejemplo de `.env.example`: ese
+archivo es una plantilla y sus valores no sirven en producción. Sacá la
+buena del panel de tu proveedor (en Neon, *Connection string*) y cargala
+en Vercel. El build ahora corta antes con ese mismo mensaje, así no hay
+que interpretar el error de Prisma.
+
 **El build falla con "Environment variable not found: DATABASE_URL".**
 Falta cargarla en Vercel, o se cargó solo para Production y el build que
-falló era un preview. Va en los tres entornos.
+falló era un preview. Va en los tres entornos. Cargarla **vacía** cuenta
+como no cargarla.
 
 **El build falla al migrar, con algo sobre prepared statements o locks.**
 `DATABASE_URL` apunta al pooler. Cargá `DIRECT_URL` con la conexión
