@@ -106,36 +106,33 @@ muestre: entrar a la app como dueño y en **Alertas** tocar
 
 ## 7 · Los cron
 
-En `vercel.json` están configurados para correr **una vez por día**: la
-sincronización a las 9:00 UTC y las alertas a las 9:30 UTC. Como
-Argentina es UTC−3, eso son las 6:00 y las 6:30 de acá: entran antes de
-que arranque la obra.
+En `vercel.json` corren **cada hora**: la sincronización a la hora en
+punto y las alertas diez minutos después.
 
-**Por qué una vez por día y no cada hora.** El plan Hobby de Vercel solo
-admite cron diarios. Una expresión más frecuente no es que no corra:
-**hace fallar el deployment** con este error:
+**Esto necesita plan Pro.** El plan Hobby solo admite cron diarios, y una
+expresión más frecuente no es que no corra: **hace fallar el
+deployment** con este error:
 
 ```
 Hobby accounts are limited to daily cron jobs.
 This cron expression would run more than once per day.
 ```
 
-Si el deploy te venía fallando y en el log aparece ese mensaje, era esto.
-
-**Si pasás a Pro**, en `vercel.json` podés volver a poner:
+Si algún día el proyecto pasa a Hobby, hay que bajarlos a una vez por
+día:
 
 ```json
 "crons": [
-  { "path": "/api/sync",             "schedule": "0 * * * *"  },
-  { "path": "/api/alertas/evaluar",  "schedule": "10 * * * *" }
+  { "path": "/api/sync",             "schedule": "0 9 * * *"  },
+  { "path": "/api/alertas/evaluar",  "schedule": "30 9 * * *" }
 ]
 ```
 
 Dos cosas más:
 
 - Los cron **solo corren en producción**, nunca en los previews.
-- En Hobby la hora es aproximada: un cron a las 9:00 dispara en algún
-  momento entre las 9:00 y las 9:59.
+- En Pro la hora es exacta al minuto. En Hobby es aproximada: un cron a
+  las 9:00 dispara en algún momento entre las 9:00 y las 9:59.
 
 Mientras tanto, las dos cosas se pueden disparar a mano desde la app
 (**Más → Sincronización → Sincronizar ahora**, y **Alertas → Revisar
@@ -182,6 +179,13 @@ códigos QR de las herramientas llevan esa URL adentro.
 
 **El deployment falla y el log habla de cron.**
 Es el plan Hobby: solo admite cron diarios. Ver el paso 7.
+
+**La base la creaste desde Vercel y el deploy igual no encuentra la URL.**
+Crear la base no la conecta al proyecto. Hay que ir a **Storage**, buscarla
+en la lista y darle **Connect**. Recién ahí Vercel inyecta `DATABASE_URL`
+y `POSTGRES_URL_NON_POOLING`. Y si ya existía una `DATABASE_URL` cargada a
+mano, la conexión falla con *"already has an existing environment variable
+with name DATABASE_URL"*: hay que borrar la vieja primero.
 
 **El build falla con "Can't reach database server at localhost:5432".**
 La `DATABASE_URL` cargada en Vercel es la de tu máquina. Suele pasar por
