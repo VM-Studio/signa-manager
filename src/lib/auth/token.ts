@@ -22,6 +22,15 @@ export interface Sesion {
   rol: Rol
   /** Empleado vinculado, si lo tiene: el capataz y el chofer lo usan. */
   empleadoId: string | null
+  /**
+   * Excepciones de acceso por módulo, puestas a mano desde Accesos.
+   *
+   * NO viaja en el token a propósito: si viajara, sacarle un módulo a
+   * alguien no tendría efecto hasta que volviera a entrar, y el token
+   * dura siete días. Lo llena `obtenerSesion` leyendo la base en cada
+   * request, así un cambio se siente en la siguiente pantalla.
+   */
+  accesos?: Record<string, boolean>
 }
 
 function claveSecreta(): Uint8Array {
@@ -35,7 +44,13 @@ function claveSecreta(): Uint8Array {
 }
 
 export async function firmarSesion(sesion: Sesion): Promise<string> {
-  return new SignJWT({ ...sesion })
+  // `accesos` nunca entra al token: se lee de la base en cada request.
+  // Si entrara, quitarle un módulo a alguien no tendría efecto hasta
+  // que se le venciera la sesión.
+  const { accesos: _sinGuardar, ...aFirmar } = sesion
+  void _sinGuardar
+
+  return new SignJWT({ ...aFirmar })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setIssuer('signa')

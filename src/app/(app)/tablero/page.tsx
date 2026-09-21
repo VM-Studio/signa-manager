@@ -1,4 +1,5 @@
 import { sesionConPermiso } from '@/lib/auth/pantalla'
+import { puede } from '@/lib/auth/permisos'
 import { armarPeriodo, calcularTablero, type ClavePeriodo } from '@/lib/calculos/tablero'
 import { operacionHoy } from '@/server/tablero/queries'
 import { db } from '@/lib/db'
@@ -55,6 +56,7 @@ export default async function PaginaTablero({
         operacion={operacion}
         unidades={unidades}
         periodoClave={clave}
+        puedeConfigurar={puede(sesion, 'configuracion.configurar')}
         unidadFiltrada={unidadFiltrada}
       />
     </>

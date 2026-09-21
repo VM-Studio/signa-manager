@@ -102,6 +102,13 @@ Reglas que el schema no puede expresar y hay que cumplir en código:
 
 Los permisos se definen en un solo lugar (`lib/auth/permisos.ts`) y se verifican **en el servidor** en cada action y cada query, no solo ocultando botones.
 
+**Accesos por persona.** El rol es la base, pero el dueño puede abrir o cerrar módulos sueltos a alguien desde **Tablero → Accesos**. Esas excepciones viven en `AccesoUsuario` y se guardan solo cuando difieren del rol. Reglas:
+
+- Cerrar un módulo lo cierra entero: no ve ni hace nada ahí.
+- Abrir un módulo da **ver**, nunca crear, editar ni aprobar. Lo que se puede hacer adentro lo sigue decidiendo el rol, y eso es lo que evita que abrir un módulo sea una puerta trasera para escribir.
+- Nadie puede editar sus propios accesos: si no, el dueño se saca Configuración y queda afuera de la única pantalla que se lo devolvería.
+- Las excepciones **no** viajan en el token: `obtenerSesion` las lee de la base en cada request, junto con si el usuario sigue existiendo y activo. Un cambio tiene efecto en la pantalla siguiente, no cuando se venza la sesión a los 7 días.
+
 ## Diseño
 
 Identidad: negro, blanco y gris. Sobria, de estudio de arquitectura, no de startup.

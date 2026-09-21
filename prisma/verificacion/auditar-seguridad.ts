@@ -144,6 +144,8 @@ const SIN_FILTRO_A_PROPOSITO: Record<string, string> = {
   'server/herramientas/queries.ts':
     'a propósito: el pañol tiene que ver todo el inventario',
   'server/tablero/queries.ts': 'a propósito: solo lo ve quien ve todo',
+  'server/nucleo/accesos-queries.ts':
+    'a propósito: lista usuarios, no datos de obra, y solo entra el dueño',
 }
 
 let inesperados = 0

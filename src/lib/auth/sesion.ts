@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
@@ -101,11 +102,54 @@ export async function cerrarSesion(): Promise<void> {
 }
 
 /** La sesión actual, o null si no hay. No tira error. */
+/**
+ * El estado actual del usuario del token: si sigue existiendo, si sigue
+ * activo y qué accesos tiene puestos a mano.
+ *
+ * Va envuelto en `cache` de React: una misma pantalla pregunta por la
+ * sesión en el layout, en la página y en cada query, y sin esto serían
+ * cinco consultas iguales por request. Con cache es una sola.
+ */
+const estadoDelUsuario = cache(async (usuarioId: string) => {
+  const usuario = await db.usuario.findUnique({
+    where: { id: usuarioId },
+    select: {
+      activo: true,
+      accesos: { select: { modulo: true, permitido: true } },
+    },
+  })
+  if (!usuario) return null
+
+  return {
+    activo: usuario.activo,
+    accesos: Object.fromEntries(
+      usuario.accesos.map((a) => [a.modulo, a.permitido]),
+    ) as Record<string, boolean>,
+  }
+})
+
 export async function obtenerSesion(): Promise<Sesion | null> {
   const almacen = await cookies()
   const token = almacen.get(NOMBRE_COOKIE)?.value
   if (!token) return null
-  return verificarToken(token)
+
+  const sesion = await verificarToken(token)
+  if (!sesion) return null
+
+  /*
+   * El token dice quién es, pero no si todavía puede entrar.
+   *
+   * Sin esta consulta, una cookie firmada sigue valiendo siete días
+   * aunque a la persona la hayan desactivado o borrado: seguiría
+   * entrando a todo. Y lo mismo con los accesos: sacarle un módulo a
+   * alguien tiene que tener efecto ya, no cuando se le venza la sesión.
+   *
+   * Es una sola consulta por request gracias al cache de arriba.
+   */
+  const estado = await estadoDelUsuario(sesion.usuarioId)
+  if (!estado || !estado.activo) return null
+
+  return { ...sesion, accesos: estado.accesos }
 }
 
 /**

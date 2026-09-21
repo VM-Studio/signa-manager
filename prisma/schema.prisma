@@ -325,32 +325,58 @@ enum EstadoEnvio {
 // ------------------------------ NUCLEO ------------------------------
 
 model Usuario {
-  id           String   @id @default(cuid())
-  nombre       String
-  email        String   @unique
-  passwordHash String
-  rol          Rol
-  telefono     String?
-  activo       Boolean  @default(true)
-  ultimoAcceso DateTime?
-  creadoEn     DateTime @default(now())
-  actualizadoEn DateTime @updatedAt
+  id            String    @id @default(cuid())
+  nombre        String
+  email         String    @unique
+  passwordHash  String
+  rol           Rol
+  telefono      String?
+  activo        Boolean   @default(true)
+  ultimoAcceso  DateTime?
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
 
   empleado   Empleado? @relation("UsuarioEmpleado", fields: [empleadoId], references: [id])
   empleadoId String?   @unique
 
-  obrasACargo             Obra[]                  @relation("JefeDeObra")
-  depositosACargo         Deposito[]
-  movimientosHerramienta  MovimientoHerramienta[] @relation("MovimientoRegistradoPor")
-  solicitudesHerramienta  SolicitudHerramienta[]  @relation("SolicitudHerramientaSolicitante")
-  solicitudesResueltas    SolicitudHerramienta[]  @relation("SolicitudHerramientaResuelta")
-  partesCargados          ParteDiario[]           @relation("ParteCargadoPor")
-  partesAprobados         ParteDiario[]           @relation("ParteAprobadoPor")
-  quincenasCerradas       Quincena[]
-  solicitudesViaje        SolicitudViaje[]
-  alertasResueltas        Alerta[]
-  notificaciones          NotificacionEnvio[]
-  auditoria               RegistroAuditoria[]
+  accesos                AccesoUsuario[]
+  obrasACargo            Obra[]                  @relation("JefeDeObra")
+  depositosACargo        Deposito[]
+  movimientosHerramienta MovimientoHerramienta[] @relation("MovimientoRegistradoPor")
+  solicitudesHerramienta SolicitudHerramienta[]  @relation("SolicitudHerramientaSolicitante")
+  solicitudesResueltas   SolicitudHerramienta[]  @relation("SolicitudHerramientaResuelta")
+  partesCargados         ParteDiario[]           @relation("ParteCargadoPor")
+  partesAprobados        ParteDiario[]           @relation("ParteAprobadoPor")
+  quincenasCerradas      Quincena[]
+  solicitudesViaje       SolicitudViaje[]
+  alertasResueltas       Alerta[]
+  notificaciones         NotificacionEnvio[]
+  auditoria              RegistroAuditoria[]
+}
+
+/// Excepciones de acceso, por persona y por módulo.
+///
+/// El rol sigue siendo la base: acá solo se guarda lo que el dueño
+/// cambió a mano. Sin fila para un módulo, manda el rol.
+///
+///   permitido = false  se lo sacamos, aunque el rol se lo dé
+///   permitido = true   se lo damos, aunque el rol no se lo dé
+///
+/// Solo abre o cierra el módulo entero. Lo que la persona puede HACER
+/// adentro lo sigue decidiendo el rol.
+model AccesoUsuario {
+  id        String  @id @default(cuid())
+  /// Uno de los módulos de lib/auth/permisos.ts.
+  modulo    String
+  permitido Boolean
+
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId String
+
+  creadoEn DateTime @default(now())
+
+  @@unique([usuarioId, modulo])
+  @@index([usuarioId])
 }
 
 model UnidadNegocio {
@@ -363,28 +389,28 @@ model UnidadNegocio {
 }
 
 model Obra {
-  id              String     @id @default(cuid())
-  codigo          String     @unique // clave compartida con el sistema base
-  nombre          String
-  tipo            TipoObra
-  estado          EstadoObra @default(EN_CURSO)
-  cliente         String?
-  direccion       String?
-  localidad       String?
-  provincia       String?
-  esInterior      Boolean    @default(false) // obras fuera de AMBA: viaticos y logistica
-  latitud         Float?
-  longitud        Float?
-  fechaInicio     DateTime?
+  id               String     @id @default(cuid())
+  codigo           String     @unique // clave compartida con el sistema base
+  nombre           String
+  tipo             TipoObra
+  estado           EstadoObra @default(EN_CURSO)
+  cliente          String?
+  direccion        String?
+  localidad        String?
+  provincia        String?
+  esInterior       Boolean    @default(false) // obras fuera de AMBA: viaticos y logistica
+  latitud          Float?
+  longitud         Float?
+  fechaInicio      DateTime?
   fechaFinPrevista DateTime?
-  fechaFinReal    DateTime?
+  fechaFinReal     DateTime?
 
   presupuestoManoObra Decimal? @db.Decimal(14, 2)
   presupuestoTotal    Decimal? @db.Decimal(14, 2)
   moneda              Moneda   @default(ARS)
 
   origen     OrigenDato @default(MANUAL)
-  idExterno  String?    // id de la obra en Lebane / Sorby
+  idExterno  String? // id de la obra en Lebane / Sorby
   ultimaSync DateTime?
 
   creadoEn      DateTime @default(now())
@@ -395,21 +421,21 @@ model Obra {
   jefeObra        Usuario?      @relation("JefeDeObra", fields: [jefeObraId], references: [id])
   jefeObraId      String?
 
-  herramientas            Herramienta[]
-  existenciasHerramienta  ExistenciaHerramienta[]
-  movimientosOrigen       MovimientoHerramienta[] @relation("MovimientoOrigenObra")
-  movimientosDestino      MovimientoHerramienta[] @relation("MovimientoDestinoObra")
-  solicitudesHerramienta  SolicitudHerramienta[]
-  asignaciones            AsignacionObra[]
-  partes                  ParteDiario[]
-  novedades               NovedadPersonal[]
-  resumenesQuincena       QuincenaLinea[]
-  solicitudesViaje        SolicitudViaje[]
-  viajes                  Viaje[]
-  cargasCombustible       CargaCombustible[]
-  movimientosExternos     MovimientoExterno[]
-  pedidosCompra           PedidoCompraExterno[]
-  alertas                 Alerta[]
+  herramientas           Herramienta[]
+  existenciasHerramienta ExistenciaHerramienta[]
+  movimientosOrigen      MovimientoHerramienta[] @relation("MovimientoOrigenObra")
+  movimientosDestino     MovimientoHerramienta[] @relation("MovimientoDestinoObra")
+  solicitudesHerramienta SolicitudHerramienta[]
+  asignaciones           AsignacionObra[]
+  partes                 ParteDiario[]
+  novedades              NovedadPersonal[]
+  resumenesQuincena      QuincenaLinea[]
+  solicitudesViaje       SolicitudViaje[]
+  viajes                 Viaje[]
+  cargasCombustible      CargaCombustible[]
+  movimientosExternos    MovimientoExterno[]
+  pedidosCompra          PedidoCompraExterno[]
+  alertas                Alerta[]
 
   @@index([estado])
   @@index([unidadNegocioId])
@@ -437,7 +463,7 @@ model Deposito {
 model MovimientoExterno {
   id          String                @id @default(cuid())
   idExterno   String
-  fuente      String                // "lebane" | "sorby" | "mock"
+  fuente      String // "lebane" | "sorby" | "mock"
   tipo        TipoMovimientoExterno
   categoria   CategoriaCostoExterno
   fecha       DateTime
@@ -483,22 +509,22 @@ model PedidoCompraExterno {
 }
 
 model RegistroSync {
-  id         String     @id @default(cuid())
-  fuente     String
-  inicio     DateTime   @default(now())
-  fin        DateTime?
-  estado     EstadoSync @default(EN_CURSO)
-  obras      Int        @default(0)
-  movimientos Int       @default(0)
-  pedidos    Int        @default(0)
-  error      String?
+  id          String     @id @default(cuid())
+  fuente      String
+  inicio      DateTime   @default(now())
+  fin         DateTime?
+  estado      EstadoSync @default(EN_CURSO)
+  obras       Int        @default(0)
+  movimientos Int        @default(0)
+  pedidos     Int        @default(0)
+  error       String?
 }
 
 // ---------------------------- HERRAMIENTAS --------------------------
 
 model CategoriaHerramienta {
-  id           String        @id @default(cuid())
-  nombre       String        @unique // Electricas, Medicion, Andamios, Encofrado, Manuales...
+  id           String                 @id @default(cuid())
+  nombre       String                 @unique // Electricas, Medicion, Andamios, Encofrado, Manuales...
   herramientas Herramienta[]
   solicitudes  SolicitudHerramienta[]
 }
@@ -516,11 +542,11 @@ model Herramienta {
   fotoUrl     String?
   notas       String?
 
-  fechaCompra   DateTime?
-  valorCompra   Decimal?  @db.Decimal(14, 2)
-  moneda        Moneda    @default(ARS)
-  proveedor     String?
-  costoDiarioImputable Decimal? @db.Decimal(12, 2) // para cargarle costo a la obra por dia de uso
+  fechaCompra          DateTime?
+  valorCompra          Decimal?  @db.Decimal(14, 2)
+  moneda               Moneda    @default(ARS)
+  proveedor            String?
+  costoDiarioImputable Decimal?  @db.Decimal(12, 2) // para cargarle costo a la obra por dia de uso
 
   mantenimientoCadaDias Int?
   proximoMantenimiento  DateTime?
@@ -531,8 +557,8 @@ model Herramienta {
   obra       Obra?     @relation(fields: [obraId], references: [id])
   obraId     String?
 
-  responsableActual   Empleado? @relation(fields: [responsableActualId], references: [id])
-  responsableActualId String?
+  responsableActual       Empleado? @relation(fields: [responsableActualId], references: [id])
+  responsableActualId     String?
   fechaDevolucionPrevista DateTime?
 
   creadoEn      DateTime @default(now())
@@ -567,14 +593,14 @@ model ExistenciaHerramienta {
 }
 
 model MovimientoHerramienta {
-  id        String                    @id @default(cuid())
-  tipo      TipoMovimientoHerramienta
-  fecha     DateTime                  @default(now())
-  cantidad  Int                       @default(1)
-  condicion Condicion?
+  id                      String                    @id @default(cuid())
+  tipo                    TipoMovimientoHerramienta
+  fecha                   DateTime                  @default(now())
+  cantidad                Int                       @default(1)
+  condicion               Condicion?
   fechaDevolucionPrevista DateTime?
-  observaciones String?
-  fotoUrl       String?
+  observaciones           String?
+  fotoUrl                 String?
 
   herramienta   Herramienta @relation(fields: [herramientaId], references: [id])
   herramientaId String
@@ -645,48 +671,48 @@ model SolicitudHerramienta {
 // ------------------------------ PERSONAL ----------------------------
 
 model Empleado {
-  id           String           @id @default(cuid())
-  legajo       String           @unique
-  nombre       String
-  apellido     String
-  dni          String           @unique
-  cuil         String?
-  telefono     String?
-  direccion    String?
-  localidad    String?
-  fechaIngreso DateTime
-  fechaEgreso  DateTime?
-  categoria    CategoriaLaboral
-  especialidad String?          // albanil, armador, encofrador, hormigonero...
-  valorHora    Decimal          @db.Decimal(12, 2)
-  activo       Boolean          @default(true)
-  fotoUrl      String?
+  id                         String           @id @default(cuid())
+  legajo                     String           @unique
+  nombre                     String
+  apellido                   String
+  dni                        String           @unique
+  cuil                       String?
+  telefono                   String?
+  direccion                  String?
+  localidad                  String?
+  fechaIngreso               DateTime
+  fechaEgreso                DateTime?
+  categoria                  CategoriaLaboral
+  especialidad               String? // albanil, armador, encofrador, hormigonero...
+  valorHora                  Decimal          @db.Decimal(12, 2)
+  activo                     Boolean          @default(true)
+  fotoUrl                    String?
   contactoEmergenciaNombre   String?
   contactoEmergenciaTelefono String?
-  talleRopa    String?
-  talleCalzado String?
-  notas        String?
-  creadoEn      DateTime @default(now())
-  actualizadoEn DateTime @updatedAt
+  talleRopa                  String?
+  talleCalzado               String?
+  notas                      String?
+  creadoEn                   DateTime         @default(now())
+  actualizadoEn              DateTime         @updatedAt
 
   usuario Usuario? @relation("UsuarioEmpleado")
 
-  documentos          DocumentoEmpleado[]
-  entregasEpp         EntregaEpp[]
-  historialValorHora  HistorialValorHora[]
-  cuadrillasComoCapataz Cuadrilla[]       @relation("CapatazCuadrilla")
-  cuadrillas          CuadrillaMiembro[]
-  asignaciones        AsignacionObra[]
-  lineasParte         ParteDiarioLinea[]
-  novedades           NovedadPersonal[]
-  lineasQuincena      QuincenaLinea[]
-  pagos               PagoPersonal[]
-  herramientasACargo  Herramienta[]
+  documentos            DocumentoEmpleado[]
+  entregasEpp           EntregaEpp[]
+  historialValorHora    HistorialValorHora[]
+  cuadrillasComoCapataz Cuadrilla[]             @relation("CapatazCuadrilla")
+  cuadrillas            CuadrillaMiembro[]
+  asignaciones          AsignacionObra[]
+  lineasParte           ParteDiarioLinea[]
+  novedades             NovedadPersonal[]
+  lineasQuincena        QuincenaLinea[]
+  pagos                 PagoPersonal[]
+  herramientasACargo    Herramienta[]
   herramientasRecibidas MovimientoHerramienta[]
-  vehiculosHabituales Vehiculo[]
-  viajes              Viaje[]
-  cargasCombustible   CargaCombustible[]
-  incidentesVehiculo  IncidenteVehiculo[]
+  vehiculosHabituales   Vehiculo[]
+  viajes                Viaje[]
+  cargasCombustible     CargaCombustible[]
+  incidentesVehiculo    IncidenteVehiculo[]
 
   @@index([activo])
   @@index([apellido, nombre])
@@ -696,7 +722,7 @@ model HistorialValorHora {
   id        String   @id @default(cuid())
   valorHora Decimal  @db.Decimal(12, 2)
   desde     DateTime
-  motivo    String?  // paritaria UOCRA, recategorizacion...
+  motivo    String? // paritaria UOCRA, recategorizacion...
 
   empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
   empleadoId String
@@ -720,12 +746,12 @@ model DocumentoEmpleado {
 
 // Entrega de ropa y elementos de proteccion (constancia Res. SRT 299/11)
 model EntregaEpp {
-  id        String   @id @default(cuid())
-  elemento  String   // casco, botines, arnes, guantes, anteojos...
-  cantidad  Int      @default(1)
-  fecha     DateTime
-  marca     String?
-  firmado   Boolean  @default(false)
+  id         String   @id @default(cuid())
+  elemento   String // casco, botines, arnes, guantes, anteojos...
+  cantidad   Int      @default(1)
+  fecha      DateTime
+  marca      String?
+  firmado    Boolean  @default(false)
   archivoUrl String?
 
   empleado   Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
@@ -746,10 +772,10 @@ model Subcontratista {
   notas       String?
   creadoEn    DateTime            @default(now())
 
-  documentos DocumentoSubcontratista[]
+  documentos   DocumentoSubcontratista[]
   asignaciones AsignacionObra[]
-  presencias ParteSubcontratista[]
-  pagos      PagoPersonal[]
+  presencias   ParteSubcontratista[]
+  pagos        PagoPersonal[]
 }
 
 model DocumentoSubcontratista {
@@ -790,10 +816,10 @@ model CuadrillaMiembro {
 
 // Planificacion: quien esta asignado a que obra y en que periodo
 model AsignacionObra {
-  id     String    @id @default(cuid())
-  desde  DateTime
-  hasta  DateTime?
-  tarea  String?
+  id    String    @id @default(cuid())
+  desde DateTime
+  hasta DateTime?
+  tarea String?
 
   obra             Obra            @relation(fields: [obraId], references: [id])
   obraId           String
@@ -835,15 +861,15 @@ model ParteDiario {
 }
 
 model ParteDiarioLinea {
-  id             String     @id @default(cuid())
-  asistencia     Asistencia @default(PRESENTE)
-  horasNormales  Decimal    @default(0) @db.Decimal(5, 2)
-  horasExtra50   Decimal    @default(0) @db.Decimal(5, 2)
-  horasExtra100  Decimal    @default(0) @db.Decimal(5, 2)
-  tarea          String?
+  id                String     @id @default(cuid())
+  asistencia        Asistencia @default(PRESENTE)
+  horasNormales     Decimal    @default(0) @db.Decimal(5, 2)
+  horasExtra50      Decimal    @default(0) @db.Decimal(5, 2)
+  horasExtra100     Decimal    @default(0) @db.Decimal(5, 2)
+  tarea             String?
   // Se congelan al aprobar el parte, para que un cambio de valor hora no reescriba la historia
-  valorHoraAplicado Decimal? @db.Decimal(12, 2)
-  costoCalculado    Decimal? @db.Decimal(14, 2)
+  valorHoraAplicado Decimal?   @db.Decimal(12, 2)
+  costoCalculado    Decimal?   @db.Decimal(14, 2)
 
   parte      ParteDiario @relation(fields: [parteId], references: [id], onDelete: Cascade)
   parteId    String
@@ -868,11 +894,11 @@ model ParteSubcontratista {
 }
 
 model NovedadPersonal {
-  id          String      @id @default(cuid())
-  tipo        TipoNovedad
-  fecha       DateTime
-  monto       Decimal     @db.Decimal(14, 2)
-  descripcion String?
+  id             String      @id @default(cuid())
+  tipo           TipoNovedad
+  fecha          DateTime
+  monto          Decimal     @db.Decimal(14, 2)
+  descripcion    String?
   comprobanteUrl String?
 
   empleado   Empleado  @relation(fields: [empleadoId], references: [id])
@@ -886,13 +912,13 @@ model NovedadPersonal {
 }
 
 model Quincena {
-  id     String         @id @default(cuid())
-  anio   Int
-  mes    Int
-  numero Int            // 1 = del 1 al 15, 2 = del 16 a fin de mes
-  desde  DateTime       @db.Date
-  hasta  DateTime       @db.Date
-  estado EstadoQuincena @default(ABIERTA)
+  id        String         @id @default(cuid())
+  anio      Int
+  mes       Int
+  numero    Int // 1 = del 1 al 15, 2 = del 16 a fin de mes
+  desde     DateTime       @db.Date
+  hasta     DateTime       @db.Date
+  estado    EstadoQuincena @default(ABIERTA)
   cerradaEn DateTime?
 
   cerradaPor   Usuario? @relation(fields: [cerradaPorId], references: [id])
@@ -908,13 +934,13 @@ model Quincena {
 // Foto congelada al cerrar la quincena: horas y costo por empleado y por obra.
 // Es lo que se le exporta al estudio que liquida los sueldos.
 model QuincenaLinea {
-  id            String  @id @default(cuid())
+  id             String  @id @default(cuid())
   diasTrabajados Int
-  horasNormales Decimal @db.Decimal(7, 2)
-  horasExtra50  Decimal @db.Decimal(7, 2)
-  horasExtra100 Decimal @db.Decimal(7, 2)
-  ausencias     Int     @default(0)
-  costo         Decimal @db.Decimal(14, 2)
+  horasNormales  Decimal @db.Decimal(7, 2)
+  horasExtra50   Decimal @db.Decimal(7, 2)
+  horasExtra100  Decimal @db.Decimal(7, 2)
+  ausencias      Int     @default(0)
+  costo          Decimal @db.Decimal(14, 2)
 
   quincena   Quincena @relation(fields: [quincenaId], references: [id], onDelete: Cascade)
   quincenaId String
@@ -927,11 +953,11 @@ model QuincenaLinea {
 }
 
 model PagoPersonal {
-  id       String    @id @default(cuid())
-  fecha    DateTime
-  monto    Decimal   @db.Decimal(14, 2)
-  medio    MedioPago
-  concepto String?
+  id             String    @id @default(cuid())
+  fecha          DateTime
+  monto          Decimal   @db.Decimal(14, 2)
+  medio          MedioPago
+  concepto       String?
   comprobanteUrl String?
 
   empleado         Empleado?       @relation(fields: [empleadoId], references: [id])
@@ -947,26 +973,26 @@ model PagoPersonal {
 // ------------------------------ VEHICULOS ---------------------------
 
 model Vehiculo {
-  id              String         @id @default(cuid())
-  patente         String         @unique
-  interno         String?        // numero interno de la empresa
-  tipo            TipoVehiculo
-  marca           String
-  modelo          String
-  anio            Int?
-  combustible     Combustible    @default(DIESEL)
-  capacidadCargaKg Int?
-  volumenM3       Decimal?       @db.Decimal(6, 2)
+  id                String         @id @default(cuid())
+  patente           String         @unique
+  interno           String? // numero interno de la empresa
+  tipo              TipoVehiculo
+  marca             String
+  modelo            String
+  anio              Int?
+  combustible       Combustible    @default(DIESEL)
+  capacidadCargaKg  Int?
+  volumenM3         Decimal?       @db.Decimal(6, 2)
   cantidadPasajeros Int?
-  kmActual        Int            @default(0)
-  horasActual     Int?           // horometro, para maquinas
-  estado          EstadoVehiculo @default(DISPONIBLE)
-  tieneGps        Boolean        @default(false)
-  costoKmEstimado Decimal?       @db.Decimal(10, 2)
-  fotoUrl         String?
-  notas           String?
-  creadoEn        DateTime       @default(now())
-  actualizadoEn   DateTime       @updatedAt
+  kmActual          Int            @default(0)
+  horasActual       Int? // horometro, para maquinas
+  estado            EstadoVehiculo @default(DISPONIBLE)
+  tieneGps          Boolean        @default(false)
+  costoKmEstimado   Decimal?       @db.Decimal(10, 2)
+  fotoUrl           String?
+  notas             String?
+  creadoEn          DateTime       @default(now())
+  actualizadoEn     DateTime       @updatedAt
 
   choferHabitual   Empleado? @relation(fields: [choferHabitualId], references: [id])
   choferHabitualId String?
@@ -995,18 +1021,18 @@ model DocumentoVehiculo {
 }
 
 model SolicitudViaje {
-  id                String               @id @default(cuid())
-  tipo              TipoViaje
-  origen            String
-  destino           String
-  descripcionCarga  String?
-  pesoEstimadoKg    Int?
-  cantidadPersonas  Int?
+  id                 String               @id @default(cuid())
+  tipo               TipoViaje
+  origen             String
+  destino            String
+  descripcionCarga   String?
+  pesoEstimadoKg     Int?
+  cantidadPersonas   Int?
   fechaHoraNecesaria DateTime
-  prioridad         Prioridad            @default(NORMAL)
-  estado            EstadoSolicitudViaje @default(PENDIENTE)
-  motivoRechazo     String?
-  creadaEn          DateTime             @default(now())
+  prioridad          Prioridad            @default(NORMAL)
+  estado             EstadoSolicitudViaje @default(PENDIENTE)
+  motivoRechazo      String?
+  creadaEn           DateTime             @default(now())
 
   obra          Obra    @relation(fields: [obraId], references: [id])
   obraId        String
@@ -1052,12 +1078,12 @@ model Viaje {
 }
 
 model CargaCombustible {
-  id       String   @id @default(cuid())
-  fecha    DateTime
-  litros   Decimal  @db.Decimal(8, 2)
-  monto    Decimal  @db.Decimal(14, 2)
-  km       Int?
-  estacion String?
+  id             String   @id @default(cuid())
+  fecha          DateTime
+  litros         Decimal  @db.Decimal(8, 2)
+  monto          Decimal  @db.Decimal(14, 2)
+  km             Int?
+  estacion       String?
   comprobanteUrl String?
 
   vehiculo   Vehiculo  @relation(fields: [vehiculoId], references: [id])
@@ -1107,16 +1133,16 @@ model IncidenteVehiculo {
 // ------------------------------- ALERTAS ----------------------------
 
 model ReglaAlerta {
-  id          String    @id @default(cuid())
-  codigo      String    @unique // HERRAMIENTA_NO_DEVUELTA, PARTE_FALTANTE, VTV_POR_VENCER...
-  nombre      String
-  descripcion String
-  modulo      String    // herramientas | personal | vehiculos | compras | obras | sistema
-  severidad   Severidad @default(AVISO)
-  umbral      Int?      // dias, km o porcentaje segun la regla
-  activa      Boolean   @default(true)
+  id           String              @id @default(cuid())
+  codigo       String              @unique // HERRAMIENTA_NO_DEVUELTA, PARTE_FALTANTE, VTV_POR_VENCER...
+  nombre       String
+  descripcion  String
+  modulo       String // herramientas | personal | vehiculos | compras | obras | sistema
+  severidad    Severidad           @default(AVISO)
+  umbral       Int? // dias, km o porcentaje segun la regla
+  activa       Boolean             @default(true)
   rolesDestino Rol[]
-  canales     CanalNotificacion[]
+  canales      CanalNotificacion[]
 
   alertas Alerta[]
 }
@@ -1127,9 +1153,9 @@ model Alerta {
   severidad   Severidad
   titulo      String
   detalle     String
-  entidadTipo String       // Herramienta | Empleado | Vehiculo | PedidoCompraExterno | Obra ...
+  entidadTipo String // Herramienta | Empleado | Vehiculo | PedidoCompraExterno | Obra ...
   entidadId   String
-  enlace      String?      // ruta interna para ir directo al problema
+  enlace      String? // ruta interna para ir directo al problema
   estado      EstadoAlerta @default(ABIERTA)
   creadaEn    DateTime     @default(now())
   resueltaEn  DateTime?
@@ -1166,7 +1192,7 @@ model NotificacionEnvio {
 
 model RegistroAuditoria {
   id        String   @id @default(cuid())
-  accion    String   // CREAR | EDITAR | ELIMINAR | APROBAR | CERRAR ...
+  accion    String // CREAR | EDITAR | ELIMINAR | APROBAR | CERRAR ...
   entidad   String
   entidadId String
   antes     Json?

@@ -3,7 +3,15 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowDownRight, ArrowUpRight, Download, Info, Minus } from 'lucide-react'
+import {
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  Download,
+  Info,
+  Minus,
+  ShieldCheck,
+} from 'lucide-react'
 import type { DatosTablero, ObraTablero } from '@/lib/calculos/tablero'
 import type { OperacionHoy } from '@/server/tablero/queries'
 import { accionExplicar } from '@/server/tablero/acciones'
@@ -48,12 +56,15 @@ export function Tablero({
   unidades,
   periodoClave,
   unidadFiltrada,
+  puedeConfigurar = false,
 }: {
   datos: DatosTablero
   operacion: OperacionHoy
   unidades: Array<{ id: string; nombre: string }>
   periodoClave: string
   unidadFiltrada: string | null
+  /** El dueño: es el único que entra a Accesos. */
+  puedeConfigurar?: boolean
 }) {
   const router = useRouter()
   const [, empezar] = useTransition()
@@ -423,6 +434,30 @@ export function Tablero({
       </div>
 
       {/* Exportar */}
+      {puedeConfigurar && (
+        <div className="px-4 pt-6">
+          <Link
+            href="/tablero/accesos"
+            className="flex min-h-[64px] items-center gap-3 rounded-[var(--radius-panel)] border border-niebla bg-blanco px-4 py-3 transition-colors hover:bg-hueso active:bg-hueso lg:max-w-[560px]"
+          >
+            <ShieldCheck
+              aria-hidden
+              className="size-5 shrink-0 text-grafito"
+              strokeWidth={1.75}
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-medium text-negro">
+                Accesos
+              </span>
+              <span className="block text-menor text-metadato">
+                Qué módulo ve cada persona
+              </span>
+            </span>
+            <ArrowRight aria-hidden className="size-4 shrink-0 text-metadato" />
+          </Link>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-2 px-4 pt-6 lg:max-w-[420px]">
         <a
           href={`/api/tablero/exportar?formato=csv&periodo=${periodoClave}&desde=${datos.periodo.desde.toISOString()}&hasta=${datos.periodo.hasta.toISOString()}`}

@@ -144,10 +144,27 @@ const PERMISOS_POR_ROL = Object.entries(MATRIZ).reduce(
 /* --------------------------- API pública --------------------------- */
 
 export function puede(
-  sesion: Pick<Sesion, 'rol'> | null | undefined,
+  sesion: Pick<Sesion, 'rol' | 'accesos'> | null | undefined,
   permiso: Permiso,
 ): boolean {
   if (!sesion) return false
+
+  const modulo = permiso.slice(0, permiso.indexOf('.')) as Modulo
+  const excepcion = sesion.accesos?.[modulo]
+
+  /*
+   * Módulo cerrado a mano: no ve nada de ese módulo, aunque el rol se lo
+   * dé. Corta antes que cualquier otra cosa.
+   */
+  if (excepcion === false) return false
+
+  /*
+   * Módulo abierto a mano: se le da VER, aunque el rol no lo tenga. Lo
+   * que puede hacer adentro lo sigue decidiendo el rol, que es lo que
+   * evita que abrir un módulo convierta a un capataz en administrador.
+   */
+  if (excepcion === true && permiso === `${modulo}.ver`) return true
+
   return PERMISOS_POR_ROL[sesion.rol].has(permiso)
 }
 
@@ -172,6 +189,36 @@ export function exigirPermiso(
 /** Todos los permisos de un rol, para la pantalla de usuarios. */
 export function permisosDe(rol: Rol): Permiso[] {
   return [...PERMISOS_POR_ROL[rol]]
+}
+
+/** ¿El rol, por sí solo y sin excepciones, ve este módulo? */
+export function rolVeModulo(rol: Rol, modulo: Modulo): boolean {
+  return PERMISOS_POR_ROL[rol].has(`${modulo}.ver`)
+}
+
+/**
+ * Qué módulos ve una persona hoy, ya con las excepciones aplicadas.
+ * Lo usa la pantalla de Accesos para dibujar las casillas.
+ */
+export function modulosQueVe(
+  rol: Rol,
+  accesos: Record<string, boolean> = {},
+): Record<Modulo, boolean> {
+  return Object.fromEntries(
+    MODULOS.map((m) => [m, accesos[m] ?? rolVeModulo(rol, m)]),
+  ) as Record<Modulo, boolean>
+}
+
+/** Los módulos, con nombre para mostrar. */
+export const NOMBRE_MODULO: Record<Modulo, string> = {
+  obras: 'Obras',
+  herramientas: 'Herramientas',
+  personal: 'Personal',
+  vehiculos: 'Vehículos',
+  alertas: 'Alertas',
+  tablero: 'Tablero',
+  compras: 'Compras',
+  configuracion: 'Configuración',
 }
 
 /* ---------------------------------------------------------------------

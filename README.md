@@ -66,6 +66,7 @@ del sistema. Se corren con `npx tsx`:
 | `probar-herramientas.ts` | Las reglas de ubicación y movimientos |
 | `probar-partes.ts` | Las reglas del parte diario y las quincenas |
 | `probar-altas.ts` | El alta de empleados, cuadrillas y vehículos: CUIL, lectura del CSV, patentes y odómetro |
+| `probar-accesos.ts` | Que abrir y cerrar un módulo por persona tenga efecto, y que una sesión desactivada deje de entrar |
 | `probar-vehiculos.ts` | Las validaciones de asignación de viajes |
 | `probar-alertas.ts` | Que el motor encuentre los problemas y no duplique |
 | `probar-tablero.ts` | Que los totales del tablero cierren contra la base |
