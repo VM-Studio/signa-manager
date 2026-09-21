@@ -47,12 +47,14 @@ Next.js solo. **No toques el build command**: ya está en `vercel.json`.
 
 ## 4 · Las variables de entorno
 
-Antes de dar Deploy, en **Environment Variables** cargar estas siete.
-Marcalas para **Production, Preview y Development**:
+Antes de dar Deploy, en **Environment Variables** cargarlas todas.
+Marcalas para **Production, Preview y Development**: si falta alguna en
+Preview, cada pull request va a fallar el build aunque producción ande.
 
 | Variable | Valor |
 |---|---|
-| `DATABASE_URL` | La del paso 1 |
+| `DATABASE_URL` | La del paso 1 (la **pooled**, con `-pooler`) |
+| `DIRECT_URL` | La conexión **directa**, la misma sin `-pooler`. Solo se usa para migrar |
 | `AUTH_SECRET` | El primero del paso 2 |
 | `CRON_SECRET` | El segundo del paso 2 |
 | `APP_URL` | `https://<tu-proyecto>.vercel.app` (después la cambiás por el dominio) |
@@ -70,12 +72,20 @@ Si vas a usar Sorby, además: `SORBY_SHEET_ID`,
 
 ## 5 · El primer deploy
 
-Dale **Deploy**. El build corre `prisma migrate deploy`, que crea las
-tablas en la base vacía.
+Dale **Deploy**. El build lo maneja `scripts/build-vercel.mjs`, que hace
+tres cosas en orden: genera el cliente de Prisma, aplica las migraciones
+y compila la app.
 
-Si falla con *"Can't reach database server"*, revisá que la
-`DATABASE_URL` sea la pooled y que la base acepte conexiones desde
-afuera.
+Ese script revisa las variables **antes** de correr nada, así que si
+falta alguna el log te dice cuál y dónde cargarla, en vez del error
+críptico de Prisma.
+
+**Por qué hacen falta dos URLs.** Neon y Supabase te dan la conexión por
+un *pooler*. Sirve para consultar, pero las migraciones no pasan por ahí:
+toman un lock y usan sentencias preparadas, que el pooler no sostiene. El
+script migra por `DIRECT_URL` si está, y la app sigue usando la pooled.
+Si tu base no tiene pooler (Railway, o un Postgres propio), poné la misma
+URL en las dos y listo.
 
 ---
 
@@ -94,21 +104,54 @@ muestre: entrar a la app como dueño y en **Alertas** tocar
 
 ---
 
-## 7 · El cron
+## 7 · Los cron
 
-Ya está configurado en `vercel.json`: la sincronización corre a la hora
-en punto y las alertas diez minutos después.
+En `vercel.json` están configurados para correr **una vez por día**: la
+sincronización a las 9:00 UTC y las alertas a las 9:30 UTC. Como
+Argentina es UTC−3, eso son las 6:00 y las 6:30 de acá: entran antes de
+que arranque la obra.
 
-**Los cron de Vercel necesitan el plan Pro.** En el plan gratuito no
-corren. Mientras tanto se pueden disparar a mano desde la app
-(**Más → Sincronización → Sincronizar ahora**) o con curl:
+**Por qué una vez por día y no cada hora.** El plan Hobby de Vercel solo
+admite cron diarios. Una expresión más frecuente no es que no corra:
+**hace fallar el deployment** con este error:
+
+```
+Hobby accounts are limited to daily cron jobs.
+This cron expression would run more than once per day.
+```
+
+Si el deploy te venía fallando y en el log aparece ese mensaje, era esto.
+
+**Si pasás a Pro**, en `vercel.json` podés volver a poner:
+
+```json
+"crons": [
+  { "path": "/api/sync",             "schedule": "0 * * * *"  },
+  { "path": "/api/alertas/evaluar",  "schedule": "10 * * * *" }
+]
+```
+
+Dos cosas más:
+
+- Los cron **solo corren en producción**, nunca en los previews.
+- En Hobby la hora es aproximada: un cron a las 9:00 dispara en algún
+  momento entre las 9:00 y las 9:59.
+
+Mientras tanto, las dos cosas se pueden disparar a mano desde la app
+(**Más → Sincronización → Sincronizar ahora**, y **Alertas → Revisar
+ahora**) o con curl:
 
 ```bash
 curl -X POST https://<tu-proyecto>.vercel.app/api/sync \
   -H "Authorization: Bearer <CRON_SECRET>"
 ```
 
-Vercel manda ese header solo; no hay que hacer nada más.
+Vercel manda ese header solo cuando dispara el cron; no hay que hacer
+nada más.
+
+Ojo: el motor de alertas igual se corre solo después de las acciones que
+resuelven problemas (devolver una herramienta, aprobar un parte), así que
+las alertas no quedan un día enteras desactualizadas.
 
 ---
 
@@ -137,9 +180,25 @@ códigos QR de las herramientas llevan esa URL adentro.
 
 ## Problemas conocidos
 
+**El deployment falla y el log habla de cron.**
+Es el plan Hobby: solo admite cron diarios. Ver el paso 7.
+
+**El build falla con "Environment variable not found: DATABASE_URL".**
+Falta cargarla en Vercel, o se cargó solo para Production y el build que
+falló era un preview. Va en los tres entornos.
+
+**El build falla al migrar, con algo sobre prepared statements o locks.**
+`DATABASE_URL` apunta al pooler. Cargá `DIRECT_URL` con la conexión
+directa. Ver el paso 5.
+
+**Deploya bien pero no puedo entrar con ningún usuario.**
+La base de producción está vacía: no hay usuarios todavía. Correr el
+seed del paso 6. Ojo que el seed **borra y recarga todo**, así que es
+para la primera vez, no para una base con datos de verdad.
+
 **El build falla con "prisma: command not found".**
-Falta `prisma` en dependencies. Ya está en devDependencies y Vercel las
-instala en el build, así que no debería pasar.
+Falta `prisma` en devDependencies. Está, y Vercel las instala en el
+build, así que no debería pasar.
 
 **Las páginas tardan la primera vez.**
 Es el cold start de las funciones. Con Fluid Compute (activado por

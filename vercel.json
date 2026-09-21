@@ -1,14 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "buildCommand": "node scripts/build-vercel.mjs",
   "crons": [
     {
       "path": "/api/sync",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/alertas/evaluar",
-      "schedule": "10 * * * *"
+      "schedule": "30 9 * * *"
     }
   ]
 }
