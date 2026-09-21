@@ -137,7 +137,9 @@ Production, Preview y Development, y volvé a desplegar.
 }
 
 revisarUrl('DATABASE_URL', leer('DATABASE_URL'))
-if (leer('DIRECT_URL')) revisarUrl('DIRECT_URL', leer('DIRECT_URL'))
+for (const n of ['DIRECT_URL', 'DATABASE_URL_UNPOOLED', 'POSTGRES_URL_NON_POOLING']) {
+  if (leer(n)) revisarUrl(n, leer(n))
+}
 
 /* --------------------------- 3. El cliente ---------------------------- */
 
@@ -151,14 +153,25 @@ paso('Generando el cliente de Prisma', 'npx', ['prisma', 'generate'])
  * usan sentencias preparadas, que el pooler no sostiene. Si está
  * DIRECT_URL, se migra por ahí y la app sigue usando el pooler.
  *
- * Se usa `leer` y no process.env directo porque una DIRECT_URL cargada
+ * Se usa `leer` y no process.env directo porque una variable cargada
  * pero vacía tiene que comportarse como si no estuviera: con `??` la
  * cadena vacía gana y se migraría contra nada.
+ *
+ * Los nombres cambian según de dónde venga la base:
+ *
+ *   DIRECT_URL                  si la cargaste a mano
+ *   DATABASE_URL_UNPOOLED       la integración Neon de Vercel
+ *   POSTGRES_URL_NON_POOLING    el Vercel Postgres viejo
+ *
+ * Se prueban en ese orden para que crear la base desde Vercel funcione
+ * sin cargar nada a mano.
  */
-const urlParaMigrar = leer('DIRECT_URL') ?? leer('DATABASE_URL')
+const DIRECTAS = ['DIRECT_URL', 'DATABASE_URL_UNPOOLED', 'POSTGRES_URL_NON_POOLING']
+const nombreDirecta = DIRECTAS.find((n) => leer(n))
+const urlParaMigrar = nombreDirecta ? leer(nombreDirecta) : leer('DATABASE_URL')
 
-if (leer('DIRECT_URL')) {
-  console.log(`${GRIS}  (migrando por DIRECT_URL, no por el pooler)${FIN}`)
+if (nombreDirecta) {
+  console.log(`${GRIS}  (migrando por ${nombreDirecta}, no por el pooler)${FIN}`)
 }
 
 try {
