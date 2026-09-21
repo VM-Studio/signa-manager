@@ -29,16 +29,17 @@ export default async function PaginaLogin({
       <div className="sobre-negro flex shrink-0 flex-col items-center justify-center bg-negro px-6 pt-12 pb-8 lg:w-1/2 lg:px-16 lg:py-0">
         <div className="pad-arriba-seguro lg:hidden" />
 
-        <div className="lg:w-full lg:max-w-[420px]">
-          <Image
-            src="/signalogo.png"
-            alt="Signa"
-            width={320}
-            height={180}
-            priority
-            className="w-[160px] lg:w-[280px]"
-          />
-        </div>
+        {/* El logo va solo y centrado. Antes estaba alineado a la
+            izquierda dentro de una caja de 420px porque debajo iba una
+            frase; sacada la frase, esa caja lo dejaba descentrado. */}
+        <Image
+          src="/signalogo.png"
+          alt="Signa"
+          width={320}
+          height={180}
+          priority
+          className="w-[160px] lg:w-[280px]"
+        />
       </div>
 
       {/* ----------------------- el formulario ---------------------- */}
