@@ -209,6 +209,35 @@ export function modulosQueVe(
   ) as Record<Modulo, boolean>
 }
 
+/**
+ * El módulo de permisos al que corresponde una regla de alerta.
+ *
+ * Las reglas usan los mismos nombres salvo 'sistema', que agrupa lo que
+ * no es de ningún módulo operativo —la sincronización atrasada, por
+ * ejemplo— y es cosa de quien maneja la configuración.
+ */
+export function moduloDeLaAlerta(moduloDeRegla: string): Modulo {
+  return moduloDeRegla === 'sistema'
+    ? 'configuracion'
+    : (moduloDeRegla as Modulo)
+}
+
+/**
+ * Los módulos de regla cuyas alertas puede recibir esta sesión.
+ *
+ * Es la lista que filtra la bandeja, el contador de la campana y a quién
+ * se le crea la notificación: si a alguien se le cerró Vehículos, no
+ * tiene por qué enterarse de que venció una VTV.
+ */
+export function modulosDeAlertaQueRecibe(
+  sesion: Pick<Sesion, 'rol' | 'accesos'>,
+  modulosDeRegla: readonly string[],
+): string[] {
+  return modulosDeRegla.filter((m) =>
+    puede(sesion, `${moduloDeLaAlerta(m)}.ver`),
+  )
+}
+
 /** Los módulos, con nombre para mostrar. */
 export const NOMBRE_MODULO: Record<Modulo, string> = {
   obras: 'Obras',

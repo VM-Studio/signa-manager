@@ -69,6 +69,10 @@ export function PanelAccesos({
           abrís o se los cerrás de a uno. Lo que puede <em>hacer</em> adentro
           de un módulo lo sigue decidiendo el rol: abrirle Personal a un
           capataz le deja ver las fichas, no cerrar quincenas.
+          <br />
+          <strong>Las alertas acompañan.</strong> Si le cerrás Vehículos,
+          deja de recibir las alertas de vehículos: no le aparecen en la
+          bandeja, no le suman en la campana y no se le mandan por mail.
         </AvisoFijo>
       </div>
 

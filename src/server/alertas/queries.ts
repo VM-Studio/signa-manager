@@ -4,12 +4,16 @@ import { EstadoAlerta, Rol, Severidad } from '@prisma/client'
 import { db } from '@/lib/db'
 import type { Sesion } from '@/lib/auth/token'
 import { obrasDeLaSesion } from '@/lib/auth/obras'
+import { modulosDeAlertaQueRecibe } from '@/lib/auth/permisos'
+import { MODULOS_ALERTA } from '@/lib/alertas/catalogo'
 
 /* =====================================================================
    Consultas de la bandeja de alertas.
 
-   Cada usuario ve solo las de los módulos y las obras que le
-   corresponden por su rol y por los roles destino de cada regla.
+   Cada usuario ve solo las alertas de los módulos a los que tiene
+   acceso, de las obras que le corresponden y de las reglas dirigidas a
+   su rol. El acceso al módulo manda: quien no entra a Vehículos no
+   recibe alertas de vehículos.
    ===================================================================== */
 
 export interface AlertaDeLista {
@@ -33,13 +37,27 @@ export interface AlertaDeLista {
 async function filtroDeLaSesion(sesion: Sesion) {
   const obraIds = await obrasDeLaSesion(sesion)
 
-  // El dueño y administración ven todo.
+  // El dueño y administración ven las alertas de todos los roles.
   const veTodo = sesion.rol === Rol.DUENO || sesion.rol === Rol.ADMINISTRACION
 
+  /*
+   * Los módulos a los que la persona tiene acceso hoy.
+   *
+   * Esto manda sobre todo lo demás, incluido el "ve todo" de arriba: si
+   * a alguien se le cerró Vehículos desde Accesos, no tiene por qué
+   * enterarse de que venció una VTV. Un contador que suma alertas de
+   * pantallas a las que no puede entrar no es información, es ruido.
+   */
+  const modulos = modulosDeAlertaQueRecibe(sesion, MODULOS_ALERTA)
+
   return {
-    // Solo las reglas cuyos roles destino incluyen el suyo.
-    ...(veTodo ? {} : { regla: { rolesDestino: { has: sesion.rol } } }),
-    // Y solo de las obras que le corresponden. Las alertas sin obra
+    regla: {
+      modulo: { in: modulos },
+      // Y, salvo el dueño y administración, solo las reglas dirigidas
+      // a su rol.
+      ...(veTodo ? {} : { rolesDestino: { has: sesion.rol } }),
+    },
+    // Solo de las obras que le corresponden. Las alertas sin obra
     // (sistema, documentación de un empleado) las ve igual.
     ...(obraIds === null
       ? {}

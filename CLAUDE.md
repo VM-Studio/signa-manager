@@ -108,6 +108,7 @@ Los permisos se definen en un solo lugar (`lib/auth/permisos.ts`) y se verifican
 - Abrir un módulo da **ver**, nunca crear, editar ni aprobar. Lo que se puede hacer adentro lo sigue decidiendo el rol, y eso es lo que evita que abrir un módulo sea una puerta trasera para escribir.
 - Nadie puede editar sus propios accesos: si no, el dueño se saca Configuración y queda afuera de la única pantalla que se lo devolvería.
 - Las excepciones **no** viajan en el token: `obtenerSesion` las lee de la base en cada request, junto con si el usuario sigue existiendo y activo. Un cambio tiene efecto en la pantalla siguiente, no cuando se venza la sesión a los 7 días.
+- **Las alertas siguen al acceso.** Quien no entra a un módulo no recibe sus alertas: ni en la bandeja, ni en el contador de la campana, ni como `NotificacionEnvio`. El filtro va en los tres lados, y al cerrar un módulo se borran además las notificaciones pendientes de ese módulo, que si no se mandarían por email el día que se conecte el proveedor. Las reglas con módulo `sistema` cuelgan de `configuracion`.
 
 ## Diseño
 

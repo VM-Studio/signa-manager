@@ -10,13 +10,16 @@
 
 import { CanalNotificacion, Rol, Severidad } from '@prisma/client'
 
-export type ModuloAlerta =
-  | 'herramientas'
-  | 'personal'
-  | 'vehiculos'
-  | 'compras'
-  | 'obras'
-  | 'sistema'
+export const MODULOS_ALERTA = [
+  'herramientas',
+  'personal',
+  'vehiculos',
+  'compras',
+  'obras',
+  'sistema',
+] as const
+
+export type ModuloAlerta = (typeof MODULOS_ALERTA)[number]
 
 export interface DefinicionRegla {
   codigo: string

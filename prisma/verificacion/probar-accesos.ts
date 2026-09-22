@@ -6,10 +6,11 @@ import './sin-server-only'
 import { Rol } from '@prisma/client'
 import {
   MODULOS,
+  moduloDeLaAlerta,
   modulosQueVe,
   puede,
   rolVeModulo,
-} from '../../src/server/../lib/auth/permisos'
+} from '../../src/lib/auth/permisos'
 import { db } from '../../src/lib/db'
 
 const ok = (c: boolean, t: string) => {
@@ -124,6 +125,137 @@ async function main() {
     huerfanos.length === 0
       ? 'No hay accesos guardados de módulos que no existen'
       : `Módulos desconocidos guardados: ${huerfanos.map((h) => h.modulo).join(', ')}`,
+  )
+
+  /* ------------------------------------------------------------------
+     Las alertas siguen a los accesos.
+     ------------------------------------------------------------------ */
+
+  console.log('\n  ── Las alertas siguen a los accesos ──\n')
+
+  const { listarAlertas, contadorAlertas } = await import(
+    '../../src/server/alertas/queries'
+  )
+
+  const comoSi = (rol: Rol, accesos: Record<string, boolean> = {}) =>
+    ({
+      usuarioId: 'x',
+      nombre: 'x',
+      email: 'x@x.com',
+      rol,
+      empleadoId: null,
+      accesos,
+    }) as Parameters<typeof listarAlertas>[0]
+
+  // Un dueño sin excepciones: es la referencia contra la que comparar.
+  const todas = await listarAlertas(comoSi(Rol.DUENO))
+  const modulosPresentes = [...new Set(todas.map((a) => a.modulo))].sort()
+  ok(
+    todas.length > 0,
+    `El dueño ve ${todas.length} alertas, de ${modulosPresentes.length} módulos: ${modulosPresentes.join(', ')}`,
+  )
+
+  // El mismo dueño, pero con TODO cerrado salvo herramientas.
+  const soloHerramientas: Record<string, boolean> = Object.fromEntries(
+    MODULOS.map((m) => [m, m === 'herramientas']),
+  )
+
+  const conSoloHerramientas = await listarAlertas(
+    comoSi(Rol.DUENO, soloHerramientas),
+  )
+  const modulosQueLlegan = [...new Set(conSoloHerramientas.map((a) => a.modulo))]
+
+  ok(
+    modulosQueLlegan.every((m) => m === 'herramientas'),
+    modulosQueLlegan.every((m) => m === 'herramientas')
+      ? `Con acceso solo a herramientas, las ${conSoloHerramientas.length} alertas que ve son todas de herramientas`
+      : `Se le colaron alertas de: ${modulosQueLlegan.filter((m) => m !== 'herramientas').join(', ')}`,
+  )
+  ok(
+    conSoloHerramientas.length < todas.length,
+    'Y son menos que las del dueño sin restricciones',
+  )
+
+  // El contador de la campana tiene que dar lo mismo que la bandeja.
+  const contador = await contadorAlertas(comoSi(Rol.DUENO, soloHerramientas))
+  const abiertasEnLaBandeja = conSoloHerramientas.filter(
+    (a) => a.estado === 'ABIERTA' || a.estado === 'VISTA',
+  ).length
+  ok(
+    contador.abiertas === abiertasEnLaBandeja,
+    `La campana dice ${contador.abiertas} y la bandeja tiene ${abiertasEnLaBandeja}: el mismo número`,
+  )
+
+  // Cerrar un módulo tiene que sacar exactamente las de ese módulo.
+  const sinVehiculos = await listarAlertas(
+    comoSi(Rol.DUENO, { vehiculos: false }),
+  )
+  ok(
+    sinVehiculos.every((a) => a.modulo !== 'vehiculos'),
+    'Cerrando solo Vehículos, no le llega ninguna alerta de vehículos',
+  )
+  ok(
+    sinVehiculos.some((a) => a.modulo === 'herramientas'),
+    'Y las de los demás módulos le siguen llegando',
+  )
+
+  // Las de 'sistema' cuelgan de configuración.
+  const sinConfiguracion = await listarAlertas(
+    comoSi(Rol.DUENO, { configuracion: false }),
+  )
+  ok(
+    sinConfiguracion.every((a) => a.modulo !== 'sistema'),
+    'Sin acceso a Configuración no recibe las alertas de sistema (sincronización)',
+  )
+
+  /* ------------------------------------------------------------------
+     Que no quede ninguna notificación fuera de lugar.
+     ------------------------------------------------------------------ */
+
+  console.log('\n  ── Las notificaciones guardadas respetan los accesos ──\n')
+
+  /*
+   * La bandeja filtra, pero eso no alcanza: una NotificacionEnvio
+   * PENDIENTE de un módulo cerrado se manda igual el día que se conecte
+   * el email. Esto revisa las filas que hay, no lo que se muestra.
+   */
+  const envios = await db.notificacionEnvio.findMany({
+    where: { estado: 'PENDIENTE' },
+    select: {
+      usuario: {
+        select: {
+          nombre: true,
+          rol: true,
+          accesos: { select: { modulo: true, permitido: true } },
+        },
+      },
+      alerta: { select: { regla: { select: { modulo: true } } } },
+    },
+  })
+
+  const fueraDeLugar = envios.filter((e) => {
+    const accesos = Object.fromEntries(
+      e.usuario.accesos.map((a) => [a.modulo, a.permitido]),
+    )
+    return !puede(
+      sesion(e.usuario.rol, accesos),
+      `${moduloDeLaAlerta(e.alerta.regla.modulo)}.ver`,
+    )
+  })
+
+  ok(
+    fueraDeLugar.length === 0,
+    fueraDeLugar.length === 0
+      ? `Las ${envios.length} notificaciones pendientes son de módulos que su destinatario puede ver`
+      : `${fueraDeLugar.length} pendientes son de módulos cerrados: ${[
+          ...new Set(
+            fueraDeLugar.map(
+              (e) => `${e.usuario.nombre} ← ${e.alerta.regla.modulo}`,
+            ),
+          ),
+        ]
+          .slice(0, 5)
+          .join(', ')}`,
   )
 
   /* ------------------------------------------------------------------

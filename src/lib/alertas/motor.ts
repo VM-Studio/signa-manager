@@ -7,6 +7,8 @@ import { reglasPersonal } from './reglas-personal'
 import { reglasVehiculos } from './reglas-vehiculos'
 import { reglasCompras, reglasSistema } from './reglas-compras'
 import type { ConfiguracionRegla, Hallazgo, Regla } from './tipos'
+import { MODULOS_ALERTA } from './catalogo'
+import { modulosDeAlertaQueRecibe } from '@/lib/auth/permisos'
 
 /* =====================================================================
    El motor de alertas.
@@ -262,8 +264,17 @@ export async function evaluarAlertas(
 /* ------------------------- NOTIFICACIONES --------------------------- */
 
 /**
- * Registros de envío para los usuarios que corresponden según los roles
- * destino de cada regla.
+ * Registros de envío para los usuarios que corresponden.
+ *
+ * Dos filtros, y los dos tienen que pasar:
+ *
+ *   1. El rol destino de la regla.
+ *   2. Que la persona tenga acceso al módulo de la regla.
+ *
+ * El segundo es el que importa: si a alguien le cerraron Vehículos
+ * desde Accesos, no se le crea la notificación de una VTV vencida. No
+ * alcanza con esconderla después en la bandeja —eso deja la fila creada
+ * y, el día que se conecte el email, se la manda igual.
  *
  * El canal de la app funciona ya (la campana y la bandeja leen las
  * alertas). Email y WhatsApp quedan registrados como PENDIENTE hasta
@@ -271,7 +282,12 @@ export async function evaluarAlertas(
  */
 async function generarNotificaciones(
   nuevas: Array<{ alertaId: string; reglaId: string }>,
-  reglas: Array<{ id: string; rolesDestino: string[]; canales: string[] }>,
+  reglas: Array<{
+    id: string
+    modulo: string
+    rolesDestino: string[]
+    canales: string[]
+  }>,
 ): Promise<number> {
   if (nuevas.length === 0) return 0
 
@@ -287,8 +303,31 @@ async function generarNotificaciones(
 
   const usuarios = await db.usuario.findMany({
     where: { activo: true, rol: { in: [...rolesNecesarios] as never } },
-    select: { id: true, rol: true },
+    select: {
+      id: true,
+      rol: true,
+      accesos: { select: { modulo: true, permitido: true } },
+    },
   })
+
+  /*
+   * Qué módulos recibe cada uno, ya con sus excepciones aplicadas. Se
+   * calcula una vez por corrida y no por alerta: con 23 reglas y diez
+   * usuarios, hacerlo adentro del bucle serían cientos de cuentas
+   * iguales.
+   */
+  const modulosPorUsuario = new Map<string, Set<string>>()
+  for (const u of usuarios) {
+    const accesos = Object.fromEntries(
+      u.accesos.map((a) => [a.modulo, a.permitido]),
+    )
+    modulosPorUsuario.set(
+      u.id,
+      new Set(
+        modulosDeAlertaQueRecibe({ rol: u.rol, accesos }, MODULOS_ALERTA),
+      ),
+    )
+  }
 
   const porRol = new Map<string, string[]>()
   for (const u of usuarios) {
@@ -309,7 +348,10 @@ async function generarNotificaciones(
 
     const destinatarios = new Set<string>()
     for (const rol of regla.rolesDestino) {
-      for (const id of porRol.get(rol) ?? []) destinatarios.add(id)
+      for (const id of porRol.get(rol) ?? []) {
+        // El acceso al módulo manda sobre el rol destino de la regla.
+        if (modulosPorUsuario.get(id)?.has(regla.modulo)) destinatarios.add(id)
+      }
     }
 
     for (const usuarioId of destinatarios) {

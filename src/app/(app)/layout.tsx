@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation'
-import { EstadoAlerta, Severidad } from '@prisma/client'
 import { obtenerSesion } from '@/lib/auth/sesion'
 import { NOMBRE_ROL, permisosDe, puede } from '@/lib/auth/permisos'
 import { BARRA_INFERIOR } from '@/lib/navegacion'
-import { db } from '@/lib/db'
+import { contadorAlertas } from '@/server/alertas/queries'
 import { Header } from '@/components/app/Header'
 import { BarraInferior } from '@/components/app/BarraInferior'
 import { BarraLateral } from '@/components/app/BarraLateral'
@@ -44,19 +43,17 @@ export default async function LayoutApp({
 
   const puedeVerAlertas = puede(sesion, 'alertas.ver')
 
-  const [alertasAbiertas, criticas] = puedeVerAlertas
-    ? await Promise.all([
-        db.alerta.count({
-          where: { estado: { in: [EstadoAlerta.ABIERTA, EstadoAlerta.VISTA] } },
-        }),
-        db.alerta.count({
-          where: {
-            estado: { in: [EstadoAlerta.ABIERTA, EstadoAlerta.VISTA] },
-            severidad: Severidad.CRITICA,
-          },
-        }),
-      ])
-    : [0, 0]
+  /*
+   * El contador de la campana sale de la MISMA consulta que la bandeja.
+   *
+   * Antes contaba todas las alertas de la empresa sin filtrar por nada:
+   * el chofer veía 52 en la campana y al entrar se encontraba con tres.
+   * Ahora el número y la lista son lo mismo, y respeta los accesos: si a
+   * alguien se le cerró un módulo, sus alertas no le suman.
+   */
+  const { abiertas: alertasAbiertas, criticas } = puedeVerAlertas
+    ? await contadorAlertas(sesion)
+    : { abiertas: 0, criticas: 0 }
 
   const items = BARRA_INFERIOR.filter(
     (i) => !i.permiso || puede(sesion, i.permiso),

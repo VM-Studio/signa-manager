@@ -9,6 +9,7 @@ import {
   rolVeModulo,
   type Modulo,
 } from '@/lib/auth/permisos'
+import { MODULOS_ALERTA } from '@/lib/alertas/catalogo'
 import { registrarAuditoria } from '@/server/nucleo/auditoria'
 
 /* =====================================================================
@@ -24,6 +25,23 @@ import { registrarAuditoria } from '@/server/nucleo/auditoria'
    acompaña el cambio en lugar de quedar congelada con una excepción que
    nadie recuerda haber puesto.
    ===================================================================== */
+
+/**
+ * Los módulos de regla de alerta que dependen de un módulo de permisos.
+ *
+ * Es al revés que `moduloDeLaAlerta`: acá se parte del permiso que se
+ * cerró y se busca qué reglas quedan afuera. 'configuracion' se lleva
+ * puestas las de 'sistema'.
+ */
+function moduloDeReglaDe(modulo: Modulo): string {
+  return modulo === 'configuracion' ? 'sistema' : modulo
+}
+
+/** Los módulos de regla que quedan fuera al cerrar estos permisos. */
+function reglasQueQuedanAfuera(cerrados: Modulo[]): string[] {
+  const nombres = new Set(cerrados.map(moduloDeReglaDe))
+  return MODULOS_ALERTA.filter((m) => nombres.has(m))
+}
 
 export interface ResultadoAcceso {
   ok?: boolean
@@ -67,11 +85,37 @@ export async function accionGuardarAccesos(
     return loQuiere === loDaElRol ? [] : [{ modulo, permitido: loQuiere }]
   })
 
+  // Los módulos que a partir de ahora NO va a ver.
+  const cerrados = MODULOS.filter((m) => !elegidos.has(m))
+
   await db.$transaction(async (tx) => {
     await tx.accesoUsuario.deleteMany({ where: { usuarioId } })
     if (excepciones.length > 0) {
       await tx.accesoUsuario.createMany({
         data: excepciones.map((e) => ({ ...e, usuarioId })),
+      })
+    }
+
+    /*
+     * Y se borran las notificaciones pendientes de los módulos que se le
+     * acaban de cerrar.
+     *
+     * La bandeja ya las filtra, así que no las vería. Pero la fila sigue
+     * en NotificacionEnvio con estado PENDIENTE, y el día que se conecte
+     * el email se le manda igual una alerta de un módulo al que no
+     * entra. Cerrar un acceso tiene que cerrar también eso.
+     *
+     * Las ya enviadas no se tocan: son historial de algo que pasó.
+     */
+    if (cerrados.length > 0) {
+      await tx.notificacionEnvio.deleteMany({
+        where: {
+          usuarioId,
+          estado: 'PENDIENTE',
+          alerta: {
+            regla: { modulo: { in: reglasQueQuedanAfuera(cerrados) } },
+          },
+        },
       })
     }
   })
