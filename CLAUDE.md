@@ -108,7 +108,17 @@ Los permisos se definen en un solo lugar (`lib/auth/permisos.ts`) y se verifican
 - Abrir un módulo da **ver**, nunca crear, editar ni aprobar. Lo que se puede hacer adentro lo sigue decidiendo el rol, y eso es lo que evita que abrir un módulo sea una puerta trasera para escribir.
 - Nadie puede editar sus propios accesos: si no, el dueño se saca Configuración y queda afuera de la única pantalla que se lo devolvería.
 - Las excepciones **no** viajan en el token: `obtenerSesion` las lee de la base en cada request, junto con si el usuario sigue existiendo y activo. Un cambio tiene efecto en la pantalla siguiente, no cuando se venza la sesión a los 7 días.
-- **Las alertas siguen al acceso.** Quien no entra a un módulo no recibe sus alertas: ni en la bandeja, ni en el contador de la campana, ni como `NotificacionEnvio`. El filtro va en los tres lados, y al cerrar un módulo se borran además las notificaciones pendientes de ese módulo, que si no se mandarían por email el día que se conecte el proveedor. Las reglas con módulo `sistema` cuelgan de `configuracion`.
+- **Las alertas siguen al acceso.** Quien no entra a un módulo no se entera de sus alertas **por ninguna vía**. Son siete, y todas tienen que filtrar:
+
+  1. La bandeja (`listarAlertas`).
+  2. El contador de la campana (`contadorAlertas`, que usa el mismo filtro).
+  3. Las críticas del inicio (`resumenEmpresa`).
+  4. Los dos contadores del tablero (`operacionHoy`).
+  5. `accionMarcarVista` y `accionDescartar`, que reciben un id: una Server Action se llama sin pasar por la pantalla que la esconde.
+  6. Lo que devuelve "Revisar ahora": el motor corre sobre toda la empresa, pero los totales que se devuelven son los de quien lo tocó.
+  7. La creación de `NotificacionEnvio`, para que no se mande por email lo que no se ve en pantalla. Al cerrar un módulo se borran además las pendientes de ese módulo.
+
+  Al agregar una pantalla que muestre alertas, va por `filtroDeLaSesion` o por `puedeVerLaAlerta`, nunca por `db.alerta` directo. Las reglas con módulo `sistema` cuelgan de `configuracion`.
 
 ## Diseño
 

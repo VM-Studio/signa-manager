@@ -1,7 +1,6 @@
 import 'server-only'
 
 import {
-  EstadoAlerta,
   EstadoHerramienta,
   EstadoObra,
   EstadoParte,
@@ -9,9 +8,9 @@ import {
   EstadoSolicitudViaje,
   EstadoVehiculo,
   EstadoViaje,
-  Severidad,
 } from '@prisma/client'
 import { db } from '@/lib/db'
+import { contadorAlertas } from '@/server/alertas/queries'
 import type { Sesion } from '@/lib/auth/sesion'
 import { obrasDeLaSesion } from '@/lib/auth/obras'
 import { armarPeriodo, calcularTablero } from '@/lib/calculos/tablero'
@@ -72,7 +71,7 @@ export interface ResumenEmpresa {
   sincronizacionAtrasada: boolean
 }
 
-export async function resumenEmpresa(): Promise<ResumenEmpresa> {
+export async function resumenEmpresa(sesion: Sesion): Promise<ResumenEmpresa> {
   const ahora = new Date()
   const periodo = armarPeriodo('este-mes')
 
@@ -98,12 +97,12 @@ export async function resumenEmpresa(): Promise<ResumenEmpresa> {
       distinct: ['empleadoId'],
     }),
     db.vehiculo.count({ where: { estado: EstadoVehiculo.EN_VIAJE } }),
-    db.alerta.count({
-      where: {
-        severidad: Severidad.CRITICA,
-        estado: { in: [EstadoAlerta.ABIERTA, EstadoAlerta.VISTA] },
-      },
-    }),
+    /*
+     * Las críticas que ESTA persona puede ver, no las de la empresa.
+     * Un número que incluye alertas de módulos a los que no entra no le
+     * sirve para nada: toca "ver cuáles" y encuentra menos.
+     */
+    contadorAlertas(sesion).then((c) => c.criticas),
     db.herramienta.count({ where: { estado: EstadoHerramienta.EN_OBRA } }),
     db.solicitudHerramienta.count({
       where: { estado: EstadoSolicitudHerramienta.PENDIENTE },

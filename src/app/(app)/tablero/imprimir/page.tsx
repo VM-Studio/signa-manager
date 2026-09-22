@@ -43,7 +43,7 @@ export default async function PaginaImprimir({
 
   const [datos, operacion] = await Promise.all([
     calcularTablero(periodo),
-    operacionHoy(periodo.desde, periodo.hasta),
+    operacionHoy(periodo.desde, periodo.hasta, sesion),
   ])
 
   return (

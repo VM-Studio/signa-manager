@@ -4,8 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { EstadoAlerta, Severidad } from '@prisma/client'
 import { db } from '@/lib/db'
 import { exigirSesion } from '@/lib/auth/sesion'
-import { exigirPermiso } from '@/lib/auth/permisos'
+import { exigirPermiso, puede } from '@/lib/auth/permisos'
 import { evaluarAlertas } from '@/lib/alertas/motor'
+import { contadorAlertas, puedeVerLaAlerta } from '@/server/alertas/queries'
 import { armarResumenDiario, procesarPendientes } from '@/lib/alertas/notificaciones'
 import type { ResultadoEvaluacion } from '@/lib/alertas/motor'
 
@@ -21,6 +22,12 @@ export async function accionMarcarVista(
 ): Promise<ResultadoAlerta> {
   const sesion = await exigirSesion()
   exigirPermiso(sesion, 'alertas.ver')
+
+  // No alcanza con tener el permiso de alertas: tiene que ser una
+  // alerta que esta persona pueda ver.
+  if (!(await puedeVerLaAlerta(sesion, alertaId))) {
+    return { error: 'Esa alerta no es tuya.' }
+  }
 
   await db.alerta.updateMany({
     where: { id: alertaId, estado: EstadoAlerta.ABIERTA },
@@ -41,6 +48,15 @@ export async function accionDescartar(
 
   if (!motivo.trim()) {
     return { error: 'Escribí por qué se descarta, así queda registrado.' }
+  }
+
+  /*
+   * Y que sea una alerta suya. Descartar deja el nombre escrito en el
+   * detalle y la saca de la bandeja de TODOS los que la veían: no puede
+   * hacerlo alguien que ni siquiera entra a ese módulo.
+   */
+  if (!(await puedeVerLaAlerta(sesion, alertaId))) {
+    return { error: 'Esa alerta no es tuya.' }
   }
 
   const alerta = await db.alerta.findUnique({
@@ -72,7 +88,26 @@ export async function accionEvaluarAhora(): Promise<ResultadoEvaluacion> {
 
   revalidatePath('/alertas')
   revalidatePath('/inicio')
-  return resultado
+
+  /*
+   * El motor corre sobre toda la empresa, pero lo que se devuelve es lo
+   * que esta persona puede ver.
+   *
+   * Sin esto, un capataz toca "Revisar ahora" y recibe los totales de
+   * la empresa entera, más el detalle por regla de módulos a los que no
+   * entra. El desglose por regla queda solo para quien configura las
+   * reglas, que es quien lo necesita.
+   */
+  const { abiertas, criticas } = await contadorAlertas(sesion)
+  const configura = puede(sesion, 'configuracion.configurar')
+
+  return {
+    ...resultado,
+    abiertas,
+    criticas,
+    porRegla: configura ? resultado.porRegla : [],
+    errores: configura ? resultado.errores : [],
+  }
 }
 
 /* ------------------------ CONFIGURACIÓN ----------------------------- */

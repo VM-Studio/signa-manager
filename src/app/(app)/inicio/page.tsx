@@ -41,7 +41,7 @@ async function contenidoSegunRol(
   switch (rol) {
     case Rol.DUENO:
     case Rol.ADMINISTRACION:
-      return <InicioDueno resumen={await resumenEmpresa()} rol={rol} />
+      return <InicioDueno resumen={await resumenEmpresa(sesion)} rol={rol} />
 
     case Rol.JEFE_OBRA:
     case Rol.ARQUITECTA:

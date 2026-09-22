@@ -209,6 +209,53 @@ async function main() {
   )
 
   /* ------------------------------------------------------------------
+     TODAS las vías por las que alguien se entera de una alerta.
+     ------------------------------------------------------------------ */
+
+  console.log('\n  ── Ninguna vía deja pasar alertas de módulos cerrados ──\n')
+
+  const { operacionHoy } = await import('../../src/server/tablero/queries')
+  const { resumenEmpresa } = await import('../../src/server/nucleo/inicio')
+  const { puedeVerLaAlerta } = await import('../../src/server/alertas/queries')
+  const { armarPeriodo } = await import('../../src/lib/calculos/tablero')
+
+  // Un dueño con TODO cerrado salvo herramientas: si algo se filtra,
+  // acá se ve.
+  const cerrado = comoSi(Rol.DUENO, soloHerramientas)
+
+  const periodo = armarPeriodo('este-mes')
+  const operacion = await operacionHoy(periodo.desde, periodo.hasta, cerrado)
+  const abiertasQueVe = (await contadorAlertas(cerrado)).abiertas
+  ok(
+    operacion.alertasAbiertas === abiertasQueVe,
+    `El tablero dice ${operacion.alertasAbiertas} abiertas y la bandeja ${abiertasQueVe}: coinciden`,
+  )
+
+  const resumen = await resumenEmpresa(cerrado)
+  const criticasQueVe = (await contadorAlertas(cerrado)).criticas
+  ok(
+    resumen.alertasCriticas === criticasQueVe,
+    `El inicio dice ${resumen.alertasCriticas} críticas y la bandeja ${criticasQueVe}: coinciden`,
+  )
+
+  // Y que no se pueda tocar una alerta de un módulo cerrado, ni
+  // sabiendo su id: las Server Actions se llaman sin pasar por la
+  // pantalla.
+  const deVehiculos = todas.find((a) => a.modulo === 'vehiculos')
+  const deHerramientas = todas.find((a) => a.modulo === 'herramientas')
+
+  if (deVehiculos && deHerramientas) {
+    ok(
+      !(await puedeVerLaAlerta(cerrado, deVehiculos.id)),
+      'Con Vehículos cerrado, no puede tocar una alerta de vehículos aunque tenga el id',
+    )
+    ok(
+      await puedeVerLaAlerta(cerrado, deHerramientas.id),
+      'Y sí puede tocar las de herramientas, que es lo que tiene abierto',
+    )
+  }
+
+  /* ------------------------------------------------------------------
      Que no quede ninguna notificación fuera de lugar.
      ------------------------------------------------------------------ */
 

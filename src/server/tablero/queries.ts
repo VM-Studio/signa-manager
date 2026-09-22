@@ -1,14 +1,14 @@
 import 'server-only'
 
 import {
-  EstadoAlerta,
   EstadoHerramienta,
   EstadoObra,
   EstadoVehiculo,
   EstadoViaje,
-  Severidad,
 } from '@prisma/client'
 import { db } from '@/lib/db'
+import type { Sesion } from '@/lib/auth/token'
+import { contadorAlertas } from '@/server/alertas/queries'
 import { ausentismo } from '@/lib/calculos/personal'
 import { comprasEvitadas } from '@/lib/calculos/herramientas'
 import { usoDeLaFlota } from '@/lib/calculos/vehiculos'
@@ -34,6 +34,7 @@ export interface OperacionHoy {
 export async function operacionHoy(
   desde: Date,
   hasta: Date,
+  sesion: Sesion,
 ): Promise<OperacionHoy> {
   const ahora = new Date()
 
@@ -44,8 +45,7 @@ export async function operacionHoy(
     flota,
     herramientas,
     evitadas,
-    criticas,
-    abiertas,
+    contador,
   ] = await Promise.all([
     db.asignacionObra.findMany({
       where: {
@@ -65,15 +65,8 @@ export async function operacionHoy(
       _sum: { valorCompra: true },
     }),
     comprasEvitadas(desde, hasta),
-    db.alerta.count({
-      where: {
-        severidad: Severidad.CRITICA,
-        estado: { in: [EstadoAlerta.ABIERTA, EstadoAlerta.VISTA] },
-      },
-    }),
-    db.alerta.count({
-      where: { estado: { in: [EstadoAlerta.ABIERTA, EstadoAlerta.VISTA] } },
-    }),
+    // Las que ve quien está mirando el tablero, no las de la empresa.
+    contadorAlertas(sesion),
   ])
 
   return {
@@ -85,8 +78,8 @@ export async function operacionHoy(
     herramientasEnObra: herramientas._count,
     valorHerramientasEnObra: Number(herramientas._sum.valorCompra ?? 0),
     comprasEvitadas: evitadas,
-    alertasCriticas: criticas,
-    alertasAbiertas: abiertas,
+    alertasCriticas: contador.criticas,
+    alertasAbiertas: contador.abiertas,
   }
 }
 

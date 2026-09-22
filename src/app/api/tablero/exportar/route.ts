@@ -30,7 +30,7 @@ export async function GET(peticion: NextRequest) {
 
   const [datos, operacion] = await Promise.all([
     calcularTablero(periodo),
-    operacionHoy(periodo.desde, periodo.hasta),
+    operacionHoy(periodo.desde, periodo.hasta, sesion),
   ])
 
   const csv = armarCsv([

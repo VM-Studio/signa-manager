@@ -40,7 +40,7 @@ export default async function PaginaTablero({
 
   const [datos, operacion, unidades] = await Promise.all([
     calcularTablero(periodo, unidadFiltrada ?? undefined),
-    operacionHoy(periodo.desde, periodo.hasta),
+    operacionHoy(periodo.desde, periodo.hasta, sesion),
     db.unidadNegocio.findMany({
       where: { activa: true },
       select: { id: true, nombre: true },

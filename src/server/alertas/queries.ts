@@ -34,7 +34,7 @@ export interface AlertaDeLista {
 }
 
 /** El filtro que arma lo que cada usuario puede ver. */
-async function filtroDeLaSesion(sesion: Sesion) {
+export async function filtroDeLaSesion(sesion: Sesion) {
   const obraIds = await obrasDeLaSesion(sesion)
 
   // El dueño y administración ven las alertas de todos los roles.
@@ -165,4 +165,25 @@ export async function listarReglas() {
     },
     orderBy: [{ modulo: 'asc' }, { nombre: 'asc' }],
   })
+}
+
+/**
+ * ¿Esta persona puede ver esta alerta puntual?
+ *
+ * Lo usan las acciones que escriben sobre una alerta por id. Sin esto,
+ * marcar como vista o descartar aceptan cualquier id: alcanza con
+ * tenerlo para tocar una alerta de un módulo al que no se entra, y las
+ * Server Actions se pueden llamar directamente, sin pasar por la
+ * pantalla que las esconde.
+ *
+ * Usa exactamente el mismo filtro que la bandeja, así no pueden quedar
+ * desincronizados.
+ */
+export async function puedeVerLaAlerta(
+  sesion: Sesion,
+  alertaId: string,
+): Promise<boolean> {
+  const filtro = await filtroDeLaSesion(sesion)
+  const cuantas = await db.alerta.count({ where: { id: alertaId, ...filtro } })
+  return cuantas > 0
 }
